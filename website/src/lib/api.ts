@@ -1,14 +1,9 @@
-// API configuration for different environments
-export const getApiBaseUrl = (): string => {
-  if (typeof window === 'undefined') {
-    // Server-side (SSR)
-    return process.env.REACT_APP_API_URL || 'http://localhost:3000';
-  }
+// website/src/lib/api.ts
 
-  // Client-side
+export const getApiBaseUrl = (): string => {
   if (process.env.NODE_ENV === 'production') {
-    // In production on Vercel, use relative URL to same domain
-    return '';
+    // On Vercel, use backend URL from env
+    return process.env.REACT_APP_API_URL || '';
   }
 
   // Local development
