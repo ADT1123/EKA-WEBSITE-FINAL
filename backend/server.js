@@ -22,5 +22,5 @@ app.get('/', (req, res) => {
 const orderRoutes = require('./routes/orderRoutes');
 app.use('/api/orders', orderRoutes);
 
-const PORT = 5000;
-app.listen(PORT, () => console.log(`API running on ${PORT}`));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
