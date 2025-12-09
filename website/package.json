@@ -1,5 +1,6 @@
 {
-  "name": "eka-website",
+  "name": "eka-frontend",
+  "proxy": "http://localhost:5000",
   "private": true,
   "version": "1.0.0",
   "type": "module",
