@@ -77,6 +77,7 @@ const Timeline = () => {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
+  const bgImageRef = useRef<HTMLImageElement>(null);
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -105,7 +106,6 @@ const Timeline = () => {
         }
       );
 
-      // Features animation
       gsap.fromTo(
         '.eka-feature-item',
         { opacity: 0, y: 30, scale: 0.95 },
@@ -123,6 +123,19 @@ const Timeline = () => {
           },
         }
       );
+
+      if (bgImageRef.current) {
+        gsap.to(bgImageRef.current, {
+          y: "120%",
+          ease: "none",
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: 1.2,
+          }
+        });
+      }
     }, sectionRef);
     return () => ctx.revert();
   }, []);
@@ -185,6 +198,16 @@ const Timeline = () => {
       ref={sectionRef}
       className="relative min-h-screen py-12 md:py-24 px-3 md:px-4 bg-[#fdf9ff] overflow-hidden"
     >
+      {/* 🔹 Parallax Background Image */}
+      <div className="absolute inset-0 -z-10">
+        <img
+          ref={bgImageRef}
+          src="/img/EKABG1.png"
+          alt="Timeline background"
+          className="w-full h-full object-cover"
+        />
+      </div>
+
       {/* background accents */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-24 left-[-5%] w-60 h-60 bg-purple-200/15 blur-3xl" />

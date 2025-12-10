@@ -162,7 +162,7 @@ const Footer = () => {
                   href="tel:+919999999999"
                   className="relative inline-flex text-white/90 text-base font-medium hover:text-[#ffdcb0] transition-colors"
                 >
-                  +91 99999 99999
+                  +91 9244012840
                   <span className="absolute left-0 -bottom-1 h-[2px] w-0 bg-[#ffdcb0] transition-all duration-300 hover:w-full" />
                 </a>
               </div>
