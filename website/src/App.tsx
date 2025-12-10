@@ -5,6 +5,7 @@ import { CartProvider } from "./CartContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import TermsAndConditions from './pages/tnc';
 import Shop from "./pages/Shop";
 import Aboutpage from "./pages/Aboutpage";
 import CartPage from "./pages/CartPage";
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/shop" element={<Shop />} />
+            <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/About" element={<Aboutpage />} />
             {/* keep custom routes above 404 */}
             <Route path="*" element={<NotFound />} />
