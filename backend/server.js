@@ -1,26 +1,31 @@
-// backend/server.js
+// server.js
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const paymentRoutes = require('./routes/payments');
 
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Mongo connect
-mongoose
-  .connect('mongodb://127.0.0.1:27017/eka-store')
-  .then(() => console.log('MongoDB connected'))
-  .catch((err) => console.error('Mongo error', err));
+// MongoDB Connection (FIXED)
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('✅ MongoDB Connected'))
+  .catch(err => console.error('❌ MongoDB Error:', err));
 
-// test root
+// Routes
+app.use('/api/payments', paymentRoutes);
+
+// Test route
 app.get('/', (req, res) => {
-  res.send('API working');
+  res.json({ message: 'EKA Backend Running' });
 });
 
-// yahan import + mount zaroor ho
-const orderRoutes = require('./routes/orderRoutes');
-app.use('/api/orders', orderRoutes);
-
+// Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
