@@ -130,12 +130,13 @@ const AboutPage = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-all duration-300">
-              <span className="text-xl md:text-2xl font-bold text-white">E</span>
-            </div>
-            <span className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-              EKA
-            </span>
+            <Link to="/" className="inline-block">
+              <img
+                src="/img/EKAPNGLOGO.png"
+                alt="EKA Logo"
+                className="h-16 w-auto opacity-90 brightness-0 invert"
+              />
+            </Link>
           </Link>
 
           {/* Desktop Menu */}
@@ -153,7 +154,7 @@ const AboutPage = () => {
               About
             </Link>
             <Link
-              to="/products"
+              to="/shop"
               className="text-white/80 hover:text-white transition-colors duration-300 font-light"
             >
               Products

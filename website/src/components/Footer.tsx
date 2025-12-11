@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef } from "react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Link } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -11,47 +11,46 @@ const Footer = () => {
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.fromTo(
-        '.footer-col',
+        ".footer-col",
         { opacity: 0, y: 30 },
         {
           opacity: 1,
           y: 0,
           duration: 0.8,
           stagger: 0.2,
-          ease: 'power2.out',
+          ease: "power2.out",
           scrollTrigger: {
             trigger: footerRef.current,
-            start: 'top 85%',
-            toggleActions: 'play none none reverse',
+            start: "top 85%",
+            toggleActions: "play none none reverse",
           },
         }
       );
 
       gsap.fromTo(
-        '.social-pill',
+        ".social-pill",
         { opacity: 0, scale: 0.8 },
         {
           opacity: 1,
           scale: 1,
           duration: 0.5,
           stagger: 0.1,
-          ease: 'back.out(1.7)',
+          ease: "back.out(1.7)",
           delay: 0.5,
           scrollTrigger: {
             trigger: footerRef.current,
-            start: 'top 85%',
+            start: "top 85%",
           },
         }
       );
 
-      // floating white particles
-      gsap.to('.footer-particle', {
-        y: 'random(-12, 12)',
-        x: 'random(-10, 10)',
-        duration: 'random(4, 7)',
+      gsap.to(".footer-particle", {
+        y: "random(-12, 12)",
+        x: "random(-10, 10)",
+        duration: "random(4, 7)",
         repeat: -1,
         yoyo: true,
-        ease: 'sine.inOut',
+        ease: "sine.inOut",
         stagger: 0.4,
       });
     }, footerRef);
@@ -60,25 +59,25 @@ const Footer = () => {
   }, []);
 
   const quickLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Featured Products', path: '/shop' },
-    { name: 'Customize Gift', path: '/custom' },
-    { name: 'Shop Now', path: '/shop' },
-    { name: 'Our Services', path: '/services' },
+    { name: "Home", path: "/" },
+    { name: "Featured Products", path: "/shop" },
+    { name: "Customize Gift", path: "/custom" },
+    { name: "Shop Now", path: "/shop" },
+    { name: "Our Services", path: "/services" },
   ];
 
   const socialButtons = [
-    { name: 'Instagram', url: '#' },
-    { name: 'Facebook', url: '#' },
-    { name: 'Twitter', url: '#' },
+    { name: "Instagram", url: "#" },
+    { name: "Facebook", url: "#" },
+    { name: "Twitter", url: "#" },
   ];
 
   return (
     <footer
       ref={footerRef}
-      className="relative pt-20 pb-10 px-6 md:px-12 overflow-hidden rounded-t-[40px]"
+      className="relative pt-16 pb-8 px-6 md:px-12 overflow-hidden rounded-t-[40px]"
       style={{
-        background: 'linear-gradient(135deg, #1f0c29 0%, #4b2c5e 100%)',
+        background: "linear-gradient(135deg, #1f0c29 0%, #4b2c5e 100%)",
       }}
     >
       {/* background glows */}
@@ -95,19 +94,42 @@ const Footer = () => {
       </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 mb-16">
-          {/* brand */}
-          <div className="footer-col lg:col-span-1 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 mb-10">
+          {/* brand + socials + rights (all here) */}
+          <div className="footer-col lg:col-span-1 space-y-5">
             <Link to="/" className="inline-block">
               <img
                 src="/img/EKAPNGLOGO.png"
                 alt="EKA Logo"
-                className="h-16 w-auto opacity-90 brightness-0 invert"
+                className="h-20 w-auto opacity-90 brightness-0 invert"
               />
             </Link>
             <p className="text-white/80 text-base leading-relaxed max-w-xs font-light">
               Premium & Customizable Gifts for Every Occasion
             </p>
+
+            {/* socials just under logo/description */}
+            <div className="space-y-3">
+              <h4 className="text-[#ffdcb0] font-semibold text-sm tracking-wide">
+                Follow us
+              </h4>
+              <div className="flex flex gap-3">
+                {socialButtons.map((social) => (
+                  <a
+                    key={social.name}
+                    href={social.url}
+                    className="social-pill relative px-5 py-2 rounded-full bg-white/5 border border-white/15 text-white/80 text-xs font-medium backdrop-blur-sm transition-all duration-300 hover:bg-[#ffdcb0] hover:text-[#2b1737] hover:border-[#ffdcb0]"
+                  >
+                    {social.name}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* rights reserved under socials */}
+            <div className="text-white/30 text-[11px]">
+              © {new Date().getFullYear()} EKA Gifts. All rights reserved.
+            </div>
           </div>
 
           <div className="hidden lg:block lg:col-span-1" />
@@ -126,7 +148,6 @@ const Footer = () => {
                     className="relative inline-flex text-white/75 text-sm md:text-base font-light transition-colors duration-200 hover:text-[#ffdcb0]"
                   >
                     {link.name}
-                    <span className="absolute left-0 -bottom-1 h-[2px] w-0 bg-[#ffdcb0] transition-all duration-300 group-hover:w-full" />
                   </Link>
                 </li>
               ))}
@@ -150,7 +171,6 @@ const Footer = () => {
                   className="relative inline-flex text-white/90 text-base font-medium hover:text-[#ffdcb0] transition-colors"
                 >
                   info.ekagifts@gmail.com
-                  <span className="absolute left-0 -bottom-1 h-[2px] w-0 bg-[#ffdcb0] transition-all duration-300 hover:w-full" />
                 </a>
               </div>
 
@@ -159,11 +179,10 @@ const Footer = () => {
                   Phone
                 </p>
                 <a
-                  href="tel:+919999999999"
+                  href="tel:+919244012840"
                   className="relative inline-flex text-white/90 text-base font-medium hover:text-[#ffdcb0] transition-colors"
                 >
                   +91 9244012840
-                  <span className="absolute left-0 -bottom-1 h-[2px] w-0 bg-[#ffdcb0] transition-all duration-300 hover:w-full" />
                 </a>
               </div>
 
@@ -179,28 +198,9 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* bottom row */}
-        <div className="border-t border-white/10 pt-10 mt-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 footer-col">
-          <div className="space-y-4">
-            <h4 className="text-[#ffdcb0] font-bold text-lg">Follow us</h4>
-            <div className="flex flex-wrap gap-3">
-              {socialButtons.map((social) => (
-                <a
-                  key={social.name}
-                  href={social.url}
-                  className="social-pill relative px-6 py-2.5 rounded-full bg-white/5 border border-white/15 text-white/80 text-sm font-medium backdrop-blur-sm transition-all duration-300 hover:bg-[#ffdcb0] hover:text-[#2b1737] hover:border-[#ffdcb0]"
-                >
-                  {social.name}
-                  <span className="pointer-events-none absolute left-6 right-6 bottom-1 h-[2px] w-0 bg-[#b98a46] rounded-full transition-all duration-300 group-hover:w-[60%]" />
-                </a>
-              ))}
-            </div>
-          </div>
-
-          <div className="text-white/30 text-xs mt-4 md:mt-0">
-            © {new Date().getFullYear()} EKA Gifts. All rights reserved.
-          </div>
-        </div>
+        {/* bottom row removed / minimized */}
+        {/* kept border line very tight if you still want separation */}
+        {/* <div className="border-t border-white/10 pt-4 mt-2" /> */}
       </div>
     </footer>
   );

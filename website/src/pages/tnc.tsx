@@ -21,7 +21,7 @@ const TermsAndConditions: React.FC = () => {
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
               Terms & Conditions
             </h1>
-            <p className="text-gray-300 mb-8">EKA GIFTS</p>
+            <p className="text-gray-300 mb-8">EKA GIFTS </p>
 
             <div className="space-y-8 text-gray-200 leading-relaxed">
               {/* Introduction */}
@@ -102,8 +102,8 @@ const TermsAndConditions: React.FC = () => {
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4">Payment Disclaimer</h2>
                 <p>
-                  All payments on Eka Gifts are processed via secure third-party payment gateways. We are <strong>not 
-                  responsible</strong> for:
+                  All payments on Eka Gifts are processed via secure third-party payment gateways. We are <strong 
+                  >not responsible</strong> for:
                 </p>
                 <ul className="list-disc pl-6 mt-3 space-y-2">
                   <li>Bank server issues</li>
@@ -123,7 +123,7 @@ const TermsAndConditions: React.FC = () => {
                 </h2>
                 
                 <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-5 mb-6">
-                  <p className="text-white font-bold text-lg mb-2">⚠️ ALL SALES ARE FINAL</p>
+                  <p className="text-white font-bold text-lg mb-2">⚠ ALL SALES ARE FINAL</p>
                   <p className="text-red-200 font-semibold">
                     NO CANCELLATION • NO REFUND • NO EXCHANGE
                   </p>
@@ -165,10 +165,10 @@ const TermsAndConditions: React.FC = () => {
                   If you do not receive your order within <strong className="text-[#ffd27a]">seven days</strong> of the 
                   estimated delivery date, you must contact us immediately at{' '}
                   <a 
-                    href="mailto:seller+04e14ce30cb749f9ac14019106423ba2@instamojo.com" 
+                    href="mailto:info.ekagifts@gmail.com" 
                     className="text-[#ffd27a] hover:underline break-all"
                   >
-                    seller+04e14ce30cb749f9ac14019106423ba2@instamojo.com
+                    info.ekagifts@gmail.com
                   </a>
                 </p>
               </section>
@@ -209,10 +209,10 @@ const TermsAndConditions: React.FC = () => {
                 <h2 className="text-2xl font-bold text-white mb-4">Governing Law & Dispute Resolution</h2>
                 <p>
                   These Terms shall be governed by the laws of India. Any dispute shall be resolved through arbitration 
-                  in Bengaluru as per the Arbitration and Conciliation Act, 1996.
+                  in Burhanpur (Madhya Pradesh) as per the Arbitration and Conciliation Act, 1996.
                 </p>
                 <p className="mt-4">
-                  Courts of <strong className="text-[#ffd27a]">Bengaluru, Karnataka</strong> shall have exclusive jurisdiction.
+                  Courts of <strong className="text-[#ffd27a]">Burhanpur, Madhya Pradesh</strong> shall have exclusive jurisdiction.
                 </p>
               </section>
 
@@ -224,10 +224,10 @@ const TermsAndConditions: React.FC = () => {
                 </p>
                 <p className="mt-3 bg-white/5 rounded-lg p-4 border border-white/10">
                   <a 
-                    href="mailto:seller+04e14ce30cb749f9ac14019106423ba2@instamojo.com" 
+                    href="mailto:info.ekagifts@gmail.com" 
                     className="text-[#ffd27a] hover:underline break-all"
                   >
-                    seller+04e14ce30cb749f9ac14019106423ba2@instamojo.com
+                    info.ekagifts@gmail.com
                   </a>
                 </p>
               </section>

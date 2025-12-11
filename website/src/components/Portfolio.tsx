@@ -68,10 +68,7 @@ const Portfolio = () => {
           <section id="home">
             <Hero />
           </section>
-          
-          <section id="about">
-            <About />
-          </section>
+
 
           <section id="Timeline">
             <Timeline />

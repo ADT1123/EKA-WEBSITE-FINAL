@@ -33,7 +33,9 @@ const CleanPreloader = ({ onComplete }: PreloaderProps) => {
         onComplete: () => onComplete(),
       });
 
-    return () => tl.kill();
+    return () => {
+      tl.kill();
+    };
   }, [onComplete]);
 
   return (

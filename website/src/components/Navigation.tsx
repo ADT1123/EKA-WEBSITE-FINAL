@@ -15,9 +15,9 @@ const Navigation = () => {
 
   const navItems = [
     { name: "Home", href: "/", isPage: true },
-    { name: "About", href: "/About", isPage: true },
-    { name: "terms", href: "/terms", isPage: true },
     { name: "Shop", href: "/shop", isPage: true },
+    { name: "Jewelleries", href: "/jewellery", isPage: true },
+    { name: "About", href: "/About", isPage: true },
   ];
 
   useEffect(() => {

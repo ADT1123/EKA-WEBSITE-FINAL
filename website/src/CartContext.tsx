@@ -1,4 +1,3 @@
-// CartContext.tsx
 import { createContext, useContext, useState, ReactNode } from "react";
 
 type CartItem = {
@@ -6,6 +5,7 @@ type CartItem = {
   name: string;
   price: number;
   quantity: number;
+  image: string;        // ✅ add image
   description?: string;
 };
 
@@ -15,12 +15,19 @@ type CartContextType = {
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
+  // ✅ coupon + discount shared state
+  appliedCoupon: string | null;
+  setAppliedCoupon: (code: string | null) => void;
+  discount: number;
+  setDiscount: (amount: number) => void;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [discount, setDiscount] = useState(0);
 
   const addToCart: CartContextType["addToCart"] = (item) => {
     setCart((prev) => {
@@ -48,11 +55,25 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
-  const clearCart = () => setCart([]);
+  const clearCart = () => {
+    setCart([]);
+    setAppliedCoupon(null);
+    setDiscount(0);
+  };
 
   return (
     <CartContext.Provider
-      value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart }}
+      value={{
+        cart,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+        appliedCoupon,
+        setAppliedCoupon,
+        discount,
+        setDiscount,
+      }}
     >
       {children}
     </CartContext.Provider>

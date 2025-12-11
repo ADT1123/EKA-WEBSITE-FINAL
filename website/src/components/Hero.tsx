@@ -1,227 +1,131 @@
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
-gsap.registerPlugin(ScrollTrigger);
-
 const Hero = () => {
   const heroRef = useRef<HTMLElement | null>(null);
-  const titleRef = useRef<HTMLHeadingElement | null>(null);
-  const subtitleRef = useRef<HTMLParagraphElement | null>(null);
-  const ctaRef = useRef<HTMLDivElement | null>(null);
-  const logoRef = useRef<HTMLDivElement | null>(null);
-  const contentWrapperRef = useRef<HTMLDivElement | null>(null);
-  const bgImageRef = useRef<HTMLImageElement | null>(null);
+  const imagesRef = useRef<(HTMLImageElement | null)[]>([]);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  let currentIndex = useRef(0);
+
+  const heroImages = [
+    '/img/ekalifestyle.jpg',
+    '/img/Ekajewelery.jpg', 
+    '/img/ekacalendar.jpg',
+    '/img/hero4.jpg',
+    '/img/hero5.jpg'
+  ];
 
   useEffect(() => {
+    // Video jaisa buttery smooth crossfade transition
+    const interval = setInterval(() => {
+      const nextIndex = (currentIndex.current + 1) % heroImages.length;
+      
+      // Current image - gentle fade + subtle scale
+      gsap.to(imagesRef.current[currentIndex.current], {
+        opacity: 0,
+        scale: 0.98,
+        duration: 1.6,
+        ease: 'power2.inOut'
+      });
+      
+      // Next image - smooth reveal
+      gsap.set(imagesRef.current[nextIndex], {
+        opacity: 0,
+        scale: 1.02
+      });
+      
+      gsap.to(imagesRef.current[nextIndex], {
+        opacity: 1,
+        scale: 1,
+        duration: 1.8,
+        ease: 'power2.out'
+      });
+      
+      currentIndex.current = nextIndex;
+    }, 4500);
+
+    // Smooth hero entrance
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-
-      // whole hero subtle fade + lift
-      tl.fromTo(
-        heroRef.current,
-        { opacity: 0, y: 20, filter: 'blur(8px)' },
-        {
-          opacity: 1,
-          y: 0,
-          filter: 'blur(0px)',
-          duration: 0.9,
-          ease: 'power2.out',
-        }
-      );
-
-      // logo + title + subtitle + ctas as a smooth chain
-      tl.fromTo(
-        logoRef.current,
-        { opacity: 0, y: 14 },
-        { opacity: 1, y: 0, duration: 0.6 },
-        '-=0.4'
-      )
-        .fromTo(
-          titleRef.current,
-          { opacity: 0, y: 28 },
-          { opacity: 1, y: 0, duration: 0.8 },
-          '-=0.3'
+      gsap.timeline()
+        .fromTo(heroRef.current, 
+          { opacity: 0, scale: 1.03 }, 
+          { opacity: 1, scale: 1, duration: 1.4, ease: 'power3.out' }
         )
-        .fromTo(
-          subtitleRef.current,
-          { opacity: 0, y: 24 },
-          { opacity: 1, y: 0, duration: 0.7 },
-          '-=0.35'
+        .fromTo(imagesRef.current[0], 
+          { opacity: 0, scale: 1.05 }, 
+          { opacity: 1, scale: 1, duration: 1.6, ease: 'power2.out' }, "-=0.8"
         )
-        .fromTo(
-          ctaRef.current,
-          { opacity: 0, y: 20, scale: 0.96 },
-          {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            duration: 0.7,
-            ease: 'back.out(1.4)',
-          },
-          '-=0.4'
+        .fromTo(buttonRef.current,
+          { opacity: 0, y: 50, scale: 0.9 }, 
+          { opacity: 1, y: 0, scale: 1, duration: 1.2, ease: 'back.out(1.6)' }, "-=0.6"
         );
-
-      // background float
-      gsap.to('.hero-floating', {
-        y: -10,
-        duration: 4,
-        yoyo: true,
-        repeat: -1,
-        ease: 'sine.inOut',
-        stagger: { each: 0.35, from: 'random' },
-      });
-
-      // ============ PARALLAX EFFECTS ============
-
-      // Background image parallax - subtle movement
-      gsap.to(bgImageRef.current, {
-        y: 150,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: heroRef.current,
-          start: 'top top',
-          end: 'bottom top',
-          scrub: 2.5,
-        },
-      });
-
-      // Background blobs parallax
-      gsap.to('.hero-floating:nth-child(1)', {
-        y: 100,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: heroRef.current,
-          start: 'top top',
-          end: 'bottom top',
-          scrub: 2,
-        },
-      });
-
-      gsap.to('.hero-floating:nth-child(2)', {
-        y: -80,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: heroRef.current,
-          start: 'top top',
-          end: 'bottom top',
-          scrub: 1.5,
-        },
-      });
-
-      gsap.to('.hero-floating:nth-child(3)', {
-        y: 120,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: heroRef.current,
-          start: 'top top',
-          end: 'bottom top',
-          scrub: 1.8,
-        },
-      });
-
-      // Content parallax + fade out
-      gsap.to(contentWrapperRef.current, {
-        yPercent: -15,
-        opacity: 0.3,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: heroRef.current,
-          start: 'top top',
-          end: 'bottom top',
-          scrub: 0.8,
-        },
-      });
-
-      // Logo subtle parallax
-      gsap.to(logoRef.current, {
-        y: -50,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: heroRef.current,
-          start: 'top top',
-          end: 'bottom top',
-          scrub: 1.2,
-        },
-      });
     }, heroRef);
 
-    return () => ctx.revert();
+    return () => {
+      ctx.revert();
+      clearInterval(interval);
+    };
   }, []);
 
   return (
     <section
-      id="hero-section"
       ref={heroRef}
-      className="relative min-h-screen w-full flex items-center justify-center overflow-hidden"
+      className="relative w-screen h-screen flex flex-col items-center justify-end pb-20 px-6 overflow-hidden"
     >
-      {/* Background Image with Parallax - No Scale */}
-      <div className="absolute inset-0 z-0">
-        <img
-          ref={bgImageRef}
-          src="/img/EKABG1.png"
-          alt="Hero background"
-          className="w-full h-full object-cover"
-        />
+      {/* Ultra Smooth Crossfade Carousel - Optimized */}
+      <div className="absolute inset-0 w-full h-full">
+        {heroImages.map((src, i) => (
+          <img
+            key={i}
+            ref={(el) => { imagesRef.current[i] = el; }}
+            src={src}
+            srcSet={`
+              ${src}?w=640 640w,
+              ${src}?w=750 750w,
+              ${src}?w=828 828w,
+              ${src}?w=1080 1080w,
+              ${src}?w=1200 1200w,
+              ${src}?w=1920 1920w,
+              ${src}?w=2560 2560w
+            `}
+            sizes="(max-width: 640px) 100vw, (max-width: 1200px) 100vw, 1920px"
+            loading={i === 0 ? "eager" : "lazy"}
+            decoding="async"
+            className="absolute inset-0 w-full h-full object-cover opacity-0 will-change-[opacity,transform]"
+            style={{ willChange: 'opacity, transform' }}
+          />
+        ))}
       </div>
 
-      {/* Floating blobs on top of background */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden z-[1]">
-        <div className="hero-floating absolute -top-24 -left-16 h-72 w-72 rounded-full bg-pink-200/40 blur-3xl" />
-        <div className="hero-floating absolute -bottom-28 -right-10 h-80 w-80 rounded-full bg-purple-300/40 blur-3xl" />
-        <div className="hero-floating absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-fuchsia-200/40 blur-3xl" />
-      </div>
-
-      <div 
-        ref={contentWrapperRef}
-        className="relative z-10 w-full max-w-6xl px-5 md:px-8 lg:px-12"
-      >
-        <div className="flex flex-col-reverse lg:flex-row items-center lg:items-center gap-10 lg:gap-16">
-          {/* left: text */}
-          <div className="w-full lg:w-1/2">
-            <h1
-              ref={titleRef}
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-bold leading-tight text-slate-900"
-            >
-              Gifts that feel
-              <span className="block bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-500 bg-clip-text text-transparent mt-1">
-                more like emotions.
-              </span>
-            </h1>
-
-            <div
-              ref={ctaRef}
-              className="mt-6 md:mt-8 flex flex-col sm:flex-row items-center gap-3 md:gap-4"
-            >
-              <Link to="/shop" className="w-full sm:w-auto">
-                <Button size="lg" className="eka-btn w-full sm:w-auto">
-                  Explore collections
-                </Button>
-              </Link>
-
-              <Link to="/about" className="w-full sm:w-auto">
-                {/* Your about button */}
-              </Link>
-            </div>
-          </div>
-
-          {/* right: big logo */}
-          <div
-            ref={logoRef}
-            className="w-full lg:w-1/2 flex justify-center lg:justify-end"
+      {/* Elegant CTA */}
+      <div className="relative z-20 w-full max-w-sm flex justify-center">
+    <Link to="/shop">
+          <Button 
+            ref={buttonRef}
+            size="lg" 
+            className="group relative px-8 py-6 text-xl font-medium bg-white/92 hover:bg-white backdrop-blur-2xl shadow-2xl hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] border border-white/60 hover:border-white/90 text-slate-900 hover:text-slate-950 transition-all duration-700 hover:scale-[1.02] hover:shadow-pink-500/40 rounded-3xl overflow-hidden will-change-transform"
           >
-            <div className="relative">
-              <div className="absolute -inset-6 rounded-full bg-pink-200/40 blur-2xl" />
-              <img
-                src="/img/EKAPNGLOGO.png"
-                alt="EKA logo"
-                className="relative h-40 sm:h-48 md:h-56 lg:h-64 xl:h-72 w-auto drop-shadow-xl"
-              />
-            </div>
-          </div>
-        </div>
+            <span className="flex items-center gap-2 relative z-10">
+              Explore collections
+              <svg 
+                className="w-5 h-5 group-hover:translate-x-1.5 transition-all duration-500 ease-out group-hover:scale-110"
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </span>
+            
+            {/* Enhanced glow + shimmer */}
+            <div className="absolute inset-0 bg-gradient-to-r from-pink-400/15 via-transparent to-purple-400/15 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-700 rounded-3xl -z-10 scale-[1.02]" />
+            
+            {/* Micro shimmer effect */}
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-1000 rounded-3xl overflow-hidden" />
+          </Button>
+        </Link>
       </div>
     </section>
   );
