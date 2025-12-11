@@ -8,7 +8,14 @@ const paymentRoutes = require('./routes/payments');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:8080",
+      "https://eka-website-weld.vercel.app"
+    ],
+  })
+);
 app.use(express.json());
 
 // MongoDB Connection (FIXED)
