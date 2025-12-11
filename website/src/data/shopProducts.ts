@@ -17,33 +17,33 @@ export interface ShopProduct {
 
 export const shopProducts: ShopProduct[] = [
   {
-    id: "luxury-her-1",
-    name: "Elegance Collection",
+    id: "vision-board",
+    name: "2026 Vision Board DIY Kit",
     description:
-      "A refined curation of self-care, accessories, and indulgent treats for a luxe gifting experience.",
-    price: 2499,
-    image: "https://placehold.co/600x400/ffd27a/4b2c5e?text=Elegance",
+      "This all-in-one Vision Board DIY Kit helps you map out your goals, visualize your dream life, and stay motivated throughout the year. Whether you’re focusing on career growth, self-improvement, better habits, or lifestyle upgrades, this kit is your perfect starting point.",
+    price: 549,
+    image: "img/visionboard.jpg",
     images: [
-      "https://placehold.co/600x400/ffd27a/4b2c5e?text=Elegance+1",
-      "https://placehold.co/600x400/ffd27a/4b2c5e?text=Elegance+2",
-      "https://placehold.co/600x400/ffd27a/4b2c5e?text=Elegance+3",
-      "https://placehold.co/600x400/ffd27a/4b2c5e?text=Elegance+4",
+      "website/public/img/visionboard-img1.jpg",
+      "img/visionboard-img2.jpg",
+      "img/visionboard-img3.jpg",
     ],
     features: [
       {
         title: "What's inside",
         points: [
-          "Premium skincare minis set",
-          "Delicate everyday jewelry piece",
-          "Artisanal chocolates or gourmet sweets",
+          "Premium A3 vision board base to build your 2026 roadmap",
+          "Glue for easy, mess-free assembling of your vision layout",
+          "Aesthetic, theme-based photos tailored to 2026 goals (career, wellness, finances, lifestyle, relationships)",
+          "Decorative washi-style tapes for borders, sections, and creative layouts",
         ],
       },
       {
         title: "Perfect for",
         points: [
-          "Birthdays and anniversaries",
-          "Congratulations or milestones",
-          "Thank‑you gestures",
+          "Students and young professionals planning their 2026 goals and milestones",
+          "Creators, founders, and side‑hustlers who want a visual roadmap for projects and ambitions",
+          "Gifting for New Year, birthdays, or goal-setting retreats and workshops",
         ],
       },
     ],

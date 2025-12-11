@@ -13,7 +13,7 @@ const Hero = () => {
     '/img/ekalifestyle.jpg',
     '/img/Ekajewelery.jpg', 
     '/img/ekacalendar.jpg',
-    '/img/hero4.jpg',
+    '/img/visionboard.jpg',
     '/img/hero5.jpg'
   ];
 

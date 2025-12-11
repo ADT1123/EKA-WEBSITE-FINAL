@@ -1,3 +1,4 @@
+// pages/shops/Item1.tsx
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useCart } from "../../CartContext";
@@ -28,23 +29,25 @@ const Item1 = () => {
     );
   }
 
-  const images = product.images && product.images.length > 0
-    ? product.images
-    : [product.image];
+  // FIX: ensure all image paths are valid; if any missing/invalid, fall back to product.image
+  const images =
+    product.images && product.images.length > 0
+      ? product.images.map((src) => src || product.image)
+      : [product.image];
 
   const addOnce = () => {
-  if (adding) return;
-  setAdding(true);
-  addToCart({
-    id: product.id,
-    name: product.name,
-    price: product.price,
-    image: product.image,           // ✅ pass image
-    description: product.description,
-  });
-  setShowToast(true);
-  setTimeout(() => setShowToast(false), 2200);
-  setTimeout(() => setAdding(false), 500);
+    if (adding) return;
+    setAdding(true);
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      description: product.description,
+    });
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2200);
+    setTimeout(() => setAdding(false), 500);
   };
 
   const handleAddToCart = () => {
@@ -54,7 +57,6 @@ const Item1 = () => {
   const handleBuyNow = () => {
     if (!adding) {
       addOnce();
-      // small delay so state/toast can fire (optional)
       setTimeout(() => {
         navigate("/cart");
       }, 200);
@@ -89,7 +91,9 @@ const Item1 = () => {
           onClick={() => navigate("/shop")}
           className="mb-8 flex items-center gap-2 text-sm text-slate-600 hover:text-[#6b4e31] transition-colors group"
         >
-          <span className="group-hover:-translate-x-1 transition-transform">←</span>
+          <span className="group-hover:-translate-x-1 transition-transform">
+            ←
+          </span>
           Back to shop
         </button>
 
@@ -103,6 +107,10 @@ const Item1 = () => {
                   src={images[activeImageIndex]}
                   alt={product.name}
                   className="w-full h-full object-cover transition-all duration-500"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = product.image;
+                  }}
                 />
               </div>
 
@@ -124,6 +132,10 @@ const Item1 = () => {
                         src={src}
                         alt=""
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = product.image;
+                        }}
                       />
                     </button>
                   ))}
@@ -146,14 +158,14 @@ const Item1 = () => {
               <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 to-[#6b4e31] bg-clip-text text-transparent mb-2">
                 ₹{product.price}
               </p>
-              <p className="text-sm text-slate-500">
-                (Inclusive of all taxes)
-              </p>
+              <p className="text-sm text-slate-500">(Inclusive of all taxes)</p>
             </div>
 
             {product.features.map((block, idx) => (
               <div key={idx} className="mb-6">
-                <h2 className="text-xl font-bold text-slate-900 mb-3">{block.title}</h2>
+                <h2 className="text-xl font-bold text-slate-900 mb-3">
+                  {block.title}
+                </h2>
                 <ul className="space-y-2">
                   {block.points.map((pt, i) => (
                     <li
