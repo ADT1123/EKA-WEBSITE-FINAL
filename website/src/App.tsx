@@ -15,7 +15,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import Contact from "./pages/Contact";
 import ProjectsPage from "./pages/OurProjects";
 import NotFound from "./pages/NotFound";
-import Item1 from "./pages/shops/item1";
+import Item1 from "../../pages/shops/Item1";
 
 const queryClient = new QueryClient();
 
