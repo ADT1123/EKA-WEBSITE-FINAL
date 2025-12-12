@@ -1,335 +1,123 @@
-// pages/About.tsx or components/AboutPage.tsx
-import { useEffect, useRef, useState } from 'react';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Link } from 'react-router-dom';
-import { List, X, ShoppingCart } from 'phosphor-react';
-import { useCart } from '../CartContext';
-
-gsap.registerPlugin(ScrollTrigger);
-
-// Simple Counter Component
-const Counter = ({ 
-  end, 
-  label, 
-  suffix = '' 
-}: { 
-  end: number; 
-  label: string; 
-  suffix?: string;
-}) => {
-  const [count, setCount] = useState(0);
-  const counterRef = useRef<HTMLDivElement>(null);
-  const hasAnimated = useRef(false);
-
-  useEffect(() => {
-    const element = counterRef.current;
-    if (!element) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && !hasAnimated.current) {
-            hasAnimated.current = true;
-            
-            gsap.to({ val: 0 }, {
-              val: end,
-              duration: 2,
-              ease: 'power2.out',
-              onUpdate: function() {
-                setCount(Math.ceil(this.targets()[0].val));
-              }
-            });
-          }
-        });
-      },
-      { threshold: 0.3 }
-    );
-
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [end]);
-
-  return (
-    <div ref={counterRef} className="text-center fade-up">
-      <div className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-3">
-        {count.toLocaleString()}{suffix}
-      </div>
-      <p className="text-base md:text-lg text-white/70 font-light tracking-wide">
-        {label}
-      </p>
-    </div>
-  );
-};
+// pages/About.tsx
+import Navigation from '../components/Navigation';
+import Footer from '../components/Footer';
 
 const AboutPage = () => {
-  const sectionRef = useRef<HTMLElement>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { cart } = useCart();
-
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Smooth fade-up animations
-      const fadeElements = gsap.utils.toArray<HTMLElement>('.fade-up');
-      
-      fadeElements.forEach((element) => {
-        gsap.fromTo(
-          element,
-          { 
-            opacity: 0, 
-            y: 60,
-          },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 1.2,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: element,
-              start: 'top 85%',
-              toggleActions: 'play none none none',
-            },
-          }
-        );
-      });
-
-      // Hero animation
-      gsap.fromTo(
-        '.hero-content',
-        { opacity: 0, y: 40 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 1.5,
-          ease: 'power3.out',
-          delay: 0.2,
-        }
-      );
-    }, sectionRef);
-
-    return () => ctx.revert();
-  }, []);
-
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-
   return (
-    <section
-      ref={sectionRef}
-      className="relative min-h-screen overflow-hidden"
-    >
-      {/* Subtle Gradient Background - Less Gold */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#4b2c5e] via-[#5a3d6b] to-[#6b4e7d]">
-        {/* Subtle overlay */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(255,210,122,0.2),transparent_50%)]" />
-        </div>
-      </div>
+    <div className="min-h-screen bg-white">
+      <Navigation />
+      
+      <main className="pt-28 pb-24 max-w-4xl mx-auto px-6 md:px-12 lg:px-16">
 
-      {/* Navbar */}
-      <nav className="relative z-50 py-6 px-6 md:px-12">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <Link to="/" className="inline-block">
-              <img
-                src="/img/EKAPNGLOGO.png"
-                alt="EKA Logo"
-                className="h-16 w-auto opacity-90 brightness-0 invert"
-              />
-            </Link>
-          </Link>
-
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-8">
-            <Link
-              to="/"
-              className="text-white/80 hover:text-white transition-colors duration-300 font-light"
-            >
-              Home
-            </Link>
-            <Link
-              to="/about"
-              className="text-white transition-colors duration-300 font-medium"
-            >
-              About
-            </Link>
-            <Link
-              to="/shop"
-              className="text-white/80 hover:text-white transition-colors duration-300 font-light"
-            >
-              Products
-            </Link>
-            <Link
-              to="/contact"
-              className="text-white/80 hover:text-white transition-colors duration-300 font-light"
-            >
-              Contact
-            </Link>
-          </div>
-
-          {/* Cart + Mobile Menu */}
-          <div className="flex items-center gap-4">
-            <Link
-              to="/cart"
-              className="relative p-2 md:p-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all duration-300"
-            >
-              <ShoppingCart size={20} className="text-white" weight="bold" />
-              {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-white text-[#4b2c5e] text-xs font-bold rounded-full flex items-center justify-center">
-                  {totalItems}
-                </span>
-              )}
-            </Link>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all duration-300"
-            >
-              {mobileMenuOpen ? (
-                <X size={20} className="text-white" weight="bold" />
-              ) : (
-                <List size={20} className="text-white" weight="bold" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Menu Dropdown */}
-        {mobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 mt-2 mx-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 overflow-hidden">
-            <Link
-              to="/"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-6 py-4 text-white/80 hover:text-white hover:bg-white/10 transition-all duration-300"
-            >
-              Home
-            </Link>
-            <Link
-              to="/about"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-6 py-4 text-white hover:bg-white/10 transition-all duration-300 font-medium"
-            >
-              About
-            </Link>
-            <Link
-              to="/products"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-6 py-4 text-white/80 hover:text-white hover:bg-white/10 transition-all duration-300"
-            >
-              Products
-            </Link>
-            <Link
-              to="/contact"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-6 py-4 text-white/80 hover:text-white hover:bg-white/10 transition-all duration-300"
-            >
-              Contact
-            </Link>
-          </div>
-        )}
-      </nav>
-
-      <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-12 py-16 md:py-24 lg:py-32">
-        
-        {/* Hero Section */}
-        <div className="hero-content text-center mb-32 md:mb-40">
-          <p className="text-sm md:text-base tracking-[0.4em] uppercase text-white/60 mb-8 font-light">
-            About EKA
-          </p>
-          <h1 className="text-5xl md:text-6xl lg:text-8xl font-bold text-white mb-10 leading-[1.1]">
-            Thoughtful gifting,<br />made simple
-          </h1>
-          <p className="max-w-2xl mx-auto text-lg md:text-xl lg:text-2xl text-white/80 leading-relaxed font-light">
-            We design personalized gift boxes that feel handmade,<br className="hidden md:block" />
-            not mass-produced.
-          </p>
-        </div>
-
-        {/* Stats Section */}
-        <div className="fade-up mb-32 md:mb-40">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-12 md:gap-16 lg:gap-20">
-            <Counter end={1500} label="Happy Customers" suffix="+" />
-            <Counter end={3200} label="Gifts Delivered" suffix="+" />
-            <Counter end={150} label="Unique Products" suffix="+" />
-            <Counter end={98} label="Satisfaction Rate" suffix="%" />
-          </div>
-        </div>
-
-        {/* Mission Statement */}
-        <div className="fade-up max-w-4xl mx-auto mb-32 md:mb-40">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white text-center mb-12 leading-tight">
-            Why We Started
-          </h2>
-          <div className="space-y-8 text-center">
-            <p className="text-lg md:text-xl text-white/80 leading-relaxed font-light">
-              EKA began with a simple question: Why do most gifts feel rushed, generic, or impersonal?
+        {/* Content */}
+        <div className="space-y-20 md:space-y-28">
+          {/* Introduction */}
+          <div className="max-w-2xl mx-auto text-center">
+            <p className="text-lg md:text-xl text-slate-700 leading-relaxed mb-8">
+              At Eka Gifts, we believe that a gift is more than just a product - it is an{' '}
+              <span className="font-semibold text-[#4b2c5e]">emotion, a memory, and a personal expression of love</span>.
             </p>
-            <p className="text-lg md:text-xl text-white/80 leading-relaxed font-light">
-              We wanted to create something different — gift boxes that carry meaning, not just products. Every box starts with a conversation about the person, the occasion, and the feeling you want to create.
+            <p className="text-lg md:text-xl text-slate-700 leading-relaxed">
+              We specialise in creating <span className="font-semibold text-[#4b2c5e]">customised, hand-crafted, premium gifting experiences</span> 
+              for individuals, celebrations, and businesses across India.
             </p>
           </div>
-        </div>
 
-        {/* Values Section */}
-        <div className="fade-up max-w-4xl mx-auto mb-32 md:mb-40">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white text-center mb-16 leading-tight">
-            What We Stand For
-          </h2>
-          <div className="grid md:grid-cols-2 gap-x-16 gap-y-10">
-            <div className="text-center md:text-left">
-              <h3 className="text-xl md:text-2xl font-semibold text-white mb-3">
-                Quality over quantity
-              </h3>
-              <p className="text-base md:text-lg text-white/70 font-light leading-relaxed">
-                Every product is chosen with care
-              </p>
-            </div>
-            
-            <div className="text-center md:text-left">
-              <h3 className="text-xl md:text-2xl font-semibold text-white mb-3">
-                Personal touch
-              </h3>
-              <p className="text-base md:text-lg text-white/70 font-light leading-relaxed">
-                Each box feels handcrafted, not factory-made
-              </p>
-            </div>
-            
-            <div className="text-center md:text-left">
-              <h3 className="text-xl md:text-2xl font-semibold text-white mb-3">
-                Sustainable choices
-              </h3>
-              <p className="text-base md:text-lg text-white/70 font-light leading-relaxed">
-                We work with makers who care about impact
-              </p>
-            </div>
-            
-            <div className="text-center md:text-left">
-              <h3 className="text-xl md:text-2xl font-semibold text-white mb-3">
-                On-time delivery
-              </h3>
-              <p className="text-base md:text-lg text-white/70 font-light leading-relaxed">
-                We respect your deadlines and moments
+          {/* Journey */}
+          <div className="text-center max-w-xl mx-auto">
+            <div className="bg-gradient-to-br from-[#fdf9ff] to-white rounded-2xl p-8 md:p-12 border border-[#ffd27a]/20">
+              <h3 className="text-2xl md:text-3xl font-black text-[#4b2c5e] mb-4">Our journey started with a simple idea:</h3>
+              <p className="text-xl text-slate-600 font-medium italic border-l-4 border-[#ffd27a]/40 pl-4">
+                to make gifting thoughtful, meaningful, and truly personal.
               </p>
             </div>
           </div>
-        </div>
 
-        {/* CTA Section */}
-        <div className="fade-up text-center">
-          <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-8 leading-tight">
-            Ready to create something special?
-          </h3>
-          <p className="text-lg md:text-xl text-white/80 mb-12 max-w-2xl mx-auto font-light">
-            Let's design a gift that tells your story — one that feels personal, thoughtful, and unforgettable.
-          </p>
-          <button className="px-10 py-5 rounded-full text-lg font-medium bg-white text-[#4b2c5e] shadow-[0_20px_50px_rgba(0,0,0,0.3)] hover:bg-white/90 hover:shadow-[0_25px_60px_rgba(0,0,0,0.4)] hover:-translate-y-1 active:scale-95 transition-all duration-300">
-            Start Your Custom Gift
-          </button>
-        </div>
+          {/* Offerings */}
+          <div>
+            <h3 className="text-2xl md:text-3xl font-black text-slate-900 text-center mb-12">Today, Eka Gifts is known for:</h3>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                "Personalized DIY Vision Board Kits",
+                "Corporate & Employee Gifting", 
+                "Celebration Hampers",
+                "Custom Decor & Keepsakes",
+                "Festive Gift Sets",
+                "Specially Curated Custom Orders"
+              ].map((item) => (
+                <div key={item} className="p-6 rounded-xl bg-white/50 border border-slate-200/50">
+                  <h4 className="text-lg font-semibold text-slate-900">{item}</h4>
+                </div>
+              ))}
+            </div>
+          </div>
 
-      </div>
-    </section>
+          {/* Process */}
+          <div className="max-w-2xl mx-auto text-center">
+            <p className="text-xl md:text-2xl text-slate-600 leading-relaxed mb-6 font-medium">
+              Every order is <span className="font-black text-[#4b2c5e]">hand-crafted with precision</span>, 
+              quality-checked, packed with love, and shipped with care.
+            </p>
+            <p className="text-lg md:text-xl text-slate-700">
+              We don't just sell gifts — we help create <span className="font-semibold text-[#6b4e7d]">moments that people never forget</span>.
+            </p>
+          </div>
+
+          {/* Vision & Mission */}
+          <div className="grid md:grid-cols-2 gap-12">
+            <div className="p-8 border border-[#ffd27a]/20 rounded-2xl bg-[#fdf9ff]/50">
+              <h4 className="text-2xl font-black text-[#4b2c5e] mb-4 bg-gradient-to-r from-[#4b2c5e] to-[#4b2c5e] bg-clip-text text-transparent">
+                Our Vision
+              </h4>
+              <p className="text-lg text-slate-700 leading-relaxed">
+                To become India's most trusted personalized gifting brand where creativity meets emotion.
+              </p>
+            </div>
+            <div className="p-8 border border-[#ffd27a]/20 rounded-2xl bg-[#fdf9ff]/50">
+              <h4 className="text-2xl font-black text-[#4b2c5e] mb-4 bg-gradient-to-r from-[#4b2c5e] to-[#4b2c5e] bg-clip-text text-transparent">
+                Our Mission
+              </h4>
+              <p className="text-lg text-slate-700 leading-relaxed">
+                To deliver high-quality, beautiful, and thoughtful gifts that transform ordinary moments into extraordinary memories.
+              </p>
+            </div>
+          </div>
+
+          {/* Values */}
+          <div>
+            <h3 className="text-2xl md:text-3xl font-black text-slate-900 text-center mb-12">Our Values</h3>
+            <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+              {[
+                { title: "Authenticity", desc: "Real craftsmanship, real emotions" },
+                { title: "Quality First", desc: "Superior materials and detail-oriented finishing" },
+                { title: "Customer Delight", desc: "Every customer is family" },
+                { title: "Innovation", desc: "Always creating something new" }
+              ].map((value) => (
+                <div key={value.title} className="p-6 border-l-4 border-[#ffd27a]/40 pl-6 bg-white/50 rounded-xl">
+                  <h4 className="text-xl font-semibold text-slate-900 mb-2">{value.title}</h4>
+                  <p className="text-slate-600">{value.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Contact */}
+          <div className="text-center max-w-lg mx-auto">
+            <div className="p-10 md:p-12 border border-[#ffd27a]/30 rounded-2xl bg-[#fdf9ff]/50">
+              <h3 className="text-2xl font-black text-[#4b2c5e] mb-6">For collaborations or inquiries</h3>
+              <a 
+                href="mailto:info.ekagifts@gmail.com"
+                className="inline-block text-black"
+              >
+                info.ekagifts@gmail.com
+              </a>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <Footer />
+    </div>
   );
 };
 

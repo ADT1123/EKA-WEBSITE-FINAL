@@ -101,7 +101,7 @@ const Navigation = () => {
             >
               <div ref={logoRef} className="flex items-center">
                 <img
-                  src="/img/EKAPNGLOGO.png"
+                  src="/img/EKAlogo.jpg"
                   alt="EKA logo"
                   className="h-10 md:h-14 w-auto transition-transform duration-300 group-hover:scale-110"
                 />
