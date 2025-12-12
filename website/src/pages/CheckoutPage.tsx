@@ -16,6 +16,9 @@ interface RazorpayResponse {
   razorpay_signature: string;
 }
 
+// Backend base URL from env
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://eka-backend-v29n.onrender.com";
+
 // Indian states list
 const INDIAN_STATES = [
   "Andaman and Nicobar Islands",
@@ -163,8 +166,9 @@ const CheckoutPage: React.FC = () => {
 
       const fullAddress = `${addressLine.trim()}, ${city.trim()}, ${stateValue.trim()} - ${pin.trim()}`;
 
+      // 🔁 Render backend use kar
       const orderResponse = await fetch(
-        "http://localhost:5000/api/payments/create-order",
+        `${API_BASE}/api/payments/create-order`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -210,7 +214,7 @@ const CheckoutPage: React.FC = () => {
         theme: { color: "#ffd27a" },
         handler: async (response: RazorpayResponse) => {
           const verifyResponse = await fetch(
-            "http://localhost:5000/api/payments/verify",
+            `${API_BASE}/api/payments/verify`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -594,3 +598,4 @@ const CheckoutPage: React.FC = () => {
 };
 
 export default CheckoutPage;
+

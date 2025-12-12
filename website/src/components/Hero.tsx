@@ -14,7 +14,7 @@ const Hero = () => {
     '/img/Ekajewelery.jpg', 
     '/img/ekacalendar.jpg',
     '/img/visionboard.jpg',
-    '/img/hero5.jpg'
+    '/img/minicalendar.jpg'
   ];
 
   useEffect(() => {

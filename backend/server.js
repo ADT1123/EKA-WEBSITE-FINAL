@@ -18,6 +18,11 @@ app.use(
 );
 app.use(express.json());
 
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok" });
+});
+
+
 // MongoDB Connection (FIXED)
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ MongoDB Connected'))
