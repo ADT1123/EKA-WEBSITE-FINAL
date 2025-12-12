@@ -2,7 +2,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useCart } from "../../CartContext";
-import { shopProducts } from "../../data/shopProducts";
+import { shopProducts } from "../../data/shopProducts.ts";
 import Navigation from "../../components/Navigation";
 
 const Item1 = () => {

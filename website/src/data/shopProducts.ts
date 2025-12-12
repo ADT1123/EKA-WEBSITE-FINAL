@@ -24,9 +24,9 @@ export const shopProducts: ShopProduct[] = [
     price: 549,
     image: "img/visionboard.jpg",
     images: [
-      "website/public/img/visionboard-img1.jpg",
-      "img/visionboard-img2.jpg",
-      "img/visionboard-img3.jpg",
+      "/img/visionboard-img1.jpg",
+      "/img/visionboard-img2.jpg",
+      "/img/visionboard-img3.jpg",
     ],
     features: [
       {
@@ -49,32 +49,32 @@ export const shopProducts: ShopProduct[] = [
     ],
   },
   {
-    id: "luxury-him-1",
-    name: "Gentleman's Choice",
+    id: "mini-desk-calendar",
+    name: "2026 Mini Desk Calendar",
     description:
-      "Thoughtfully curated essentials for someone who appreciates quality, comfort, and style.",
-    price: 2799,
-    image: "https://placehold.co/600x400/ffd27a/4b2c5e?text=Gentleman",
+      "Start your year with clarity and calm. This beautifully designed 2026 Mini Desk Calendar features soothing, nature-inspired artwork paired with a clean, minimalist date layout — perfect for your work desk, study table, or home décor.",
+    price: 349,
+    image: "/img/minicalendar1.jpg",
     images: [
-      "https://placehold.co/600x400/ffd27a/4b2c5e?text=Gentleman+1",
-      "https://placehold.co/600x400/ffd27a/4b2c5e?text=Gentleman+2",
-      "https://placehold.co/600x400/ffd27a/4b2c5e?text=Gentleman+3",
+      "/img/minicalendar1.jpg",
+      "/img/minicalendar2.jpg",
+      "/img/minicalendar3.jpg",
     ],
     features: [
       {
         title: "What's inside",
         points: [
-          "Premium grooming essentials",
-          "Leather or faux‑leather accessory",
-          "Snack or beverage add‑on",
+          "Beautiful nature-themed artwork for all 12 months",
+          "High-quality print with sharp colors",
+          "Premium wooden easel stand included",
         ],
       },
       {
         title: "Perfect for",
         points: [
-          "Colleagues and friends",
-          "Festive gifting",
-          "Graduation or promotion",
+          "Daily planning & habit tracking",
+          "New Year gifting",
+          "Desk décor enhancement",
         ],
       },
     ],
