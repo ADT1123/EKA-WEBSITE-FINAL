@@ -1,32 +1,37 @@
 // pages/AdminDashboard.tsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../apiConfig';
+
+interface OrderItem {
+  id?: string;
+  name?: string;
+  price?: number;
+  quantity?: number;
+  image?: string;
+}
 
 interface Order {
   _id: string;
-  id: string;
-  userId: string;
-  userEmail: string;
-  userName: string;
-  items: Array<{
-    id: string;
-    name: string;
-    price: number;
-    quantity: number;
-    image: string;
-  }>;
-  total: number;
-  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
-  address: {
-    name: string;
-    phone: string;
-    street: string;
-    city: string;
-    state: string;
-    pincode: string;
+  id?: string;                          // optional, Atlas me ho bhi sakta hai nahi bhi
+  userId?: string;
+  userEmail?: string;
+  userName?: string;
+  items?: OrderItem[];
+  total?: number;
+  amount?: number;                      // fallback, agar schema me amount ho
+  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled' | 'paid';
+  paymentStatus?: string;              // e.g. "paid" / "pending"
+  address?: {
+    name?: string;
+    phone?: string;
+    street?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
   };
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 const AdminDashboard = () => {
@@ -43,10 +48,15 @@ const AdminDashboard = () => {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/admin/orders', {
+      if (!token) {
+        navigate('/admin-login');
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/admin/orders`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       if (response.status === 401) {
         localStorage.removeItem('adminToken');
         navigate('/admin-login');
@@ -54,7 +64,7 @@ const AdminDashboard = () => {
       }
 
       const data = await response.json();
-      setOrders(data);
+      setOrders(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to fetch orders:', err);
     } finally {
@@ -65,7 +75,12 @@ const AdminDashboard = () => {
   const updateStatus = async (orderId: string, newStatus: Order['status']) => {
     try {
       const token = localStorage.getItem('adminToken');
-      await fetch(`/api/admin/orders/${orderId}`, {
+      if (!token) {
+        navigate('/admin-login');
+        return;
+      }
+
+      await fetch(`${API_BASE_URL}/api/admin/orders/${orderId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -73,17 +88,30 @@ const AdminDashboard = () => {
         },
         body: JSON.stringify({ status: newStatus }),
       });
-      fetchOrders(); // Refresh list
+
+      fetchOrders();
     } catch (err) {
       alert('Failed to update status');
     }
   };
 
-  const filteredOrders = orders.filter(order =>
-    order.id.includes(search) ||
-    order.userName.toLowerCase().includes(search.toLowerCase()) ||
-    order.userEmail.toLowerCase().includes(search.toLowerCase())
-  ).filter(order => !statusFilter || order.status === statusFilter);
+  const filteredOrders = orders
+    .filter((order) => {
+      const safeId = (order.id || order._id || '').toString();
+      const safeName =
+        (order.userName ||
+          order.address?.name ||
+          '').toLowerCase();
+      const safeEmail = (order.userEmail || '').toLowerCase();
+      const q = search.toLowerCase();
+
+      return (
+        safeId.includes(q) ||
+        safeName.includes(q) ||
+        safeEmail.includes(q)
+      );
+    })
+    .filter((order) => !statusFilter || order.status === statusFilter);
 
   if (loading) {
     return (
@@ -132,6 +160,7 @@ const AdminDashboard = () => {
             <option value="shipped">Shipped</option>
             <option value="delivered">Delivered</option>
             <option value="cancelled">Cancelled</option>
+            <option value="paid">Paid</option>
           </select>
           <button
             onClick={fetchOrders}
@@ -147,60 +176,137 @@ const AdminDashboard = () => {
             <table className="w-full">
               <thead className="bg-gradient-to-r from-[#fdf9ff] to-slate-50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Order ID</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Customer</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Total</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Order ID
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Customer
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Total
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {filteredOrders.map((order) => (
-                  <tr key={order._id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 font-mono text-sm font-semibold text-[#4b2c5e]">
-                      #{order.id}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-slate-900">{order.userName}</div>
-                      <div className="text-sm text-slate-500">{order.userEmail}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-lg font-bold text-[#4b2c5e]">
-                        ₹{order.total.toLocaleString('en-IN')}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        order.status === 'delivered' ? 'bg-emerald-100 text-emerald-800' :
-                        order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                        order.status === 'confirmed' ? 'bg-amber-100 text-amber-800' :
-                        order.status === 'pending' ? 'bg-slate-100 text-slate-800' :
-                        'bg-rose-100 text-rose-800'
-                      }`}>
-                        {order.status.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-500">
-                      {new Date(order.createdAt).toLocaleDateString('en-IN')}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2">
-                        <select
-                          value={order.status}
-                          onChange={(e) => updateStatus(order._id, e.target.value as Order['status'])}
-                          className="px-3 py-1 rounded-xl text-xs border border-slate-200 focus:border-[#ffd27a] focus:ring-1"
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="confirmed">Confirmed</option>
-                          <option value="shipped">Shipped</option>
-                          <option value="delivered">Delivered</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {filteredOrders.map((order) => {
+                  const displayId = order.id || order._id;
+                  const customerName =
+                    order.userName ||
+                    order.address?.name ||
+                    'Unknown';
+                  const customerEmail = order.userEmail || '-';
+                  const totalValue =
+                    order.total ??
+                    order.amount ??
+                    0;
+                  const created =
+                    order.createdAt
+                      ? new Date(order.createdAt).toLocaleDateString('en-IN')
+                      : '-';
+
+                  const statusLabel = (order.status || 'pending').toUpperCase();
+                  const paymentLabel =
+                    order.paymentStatus === 'paid' ||
+                    order.status === 'paid' ||
+                    order.status === 'delivered'
+                      ? 'PAID'
+                      : 'PENDING';
+
+                  const statusClass =
+                    order.status === 'delivered' || order.status === 'paid'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : order.status === 'shipped'
+                      ? 'bg-blue-100 text-blue-800'
+                      : order.status === 'confirmed'
+                      ? 'bg-amber-100 text-amber-800'
+                      : order.status === 'pending'
+                      ? 'bg-slate-100 text-slate-800'
+                      : 'bg-rose-100 text-rose-800';
+
+                  const paymentClass =
+                    paymentLabel === 'PAID'
+                      ? 'bg-rose-100 text-rose-700'
+                      : 'bg-slate-100 text-slate-700';
+
+                  return (
+                    <tr key={order._id} className="hover:bg-slate-50 transition-colors">
+                      {/* Order ID */}
+                      <td className="px-6 py-4 font-mono text-sm font-semibold text-[#4b2c5e]">
+                        #{displayId}
+                      </td>
+
+                      {/* Customer */}
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-slate-900">
+                          {customerName}
+                        </div>
+                        <div className="text-sm text-slate-500">
+                          {customerEmail}
+                        </div>
+                      </td>
+
+                      {/* Total */}
+                      <td className="px-6 py-4">
+                        <span className="text-lg font-bold text-[#4b2c5e]">
+                          ₹{totalValue.toLocaleString('en-IN')}
+                        </span>
+                      </td>
+
+                      {/* Status + Payment */}
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${statusClass}`}
+                          >
+                            {statusLabel}
+                          </span>
+                          <span
+                            className={`px-3 py-1 rounded-full text-[10px] font-semibold self-start ${paymentClass}`}
+                          >
+                            {paymentLabel}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Date */}
+                      <td className="px-6 py-4 text-sm text-slate-500">
+                        {created}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2">
+                          <select
+                            value={order.status}
+                            onChange={(e) =>
+                              updateStatus(
+                                order._id,
+                                e.target.value as Order['status']
+                              )
+                            }
+                            className="px-3 py-1 rounded-xl text-xs border border-slate-200 focus:border-[#ffd27a] focus:ring-1"
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="paid">Paid</option>
+                          </select>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
