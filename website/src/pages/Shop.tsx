@@ -136,7 +136,7 @@ const Shop = () => {
         {/* banner (no text, auto sliding) */}
 
         <div className="mb-8 md:mb-10">
-          <div className="relative w-full overflow-hidden rounded-3xl border border-[#ffd27a]/60 bg-slate-50 shadow-[0_22px_65px_rgba(15,23,42,0.22)]">
+          <div className="relative w-full overflow-hidden rounded-3xl border border-[#ffd27a]/60 bg-slate-50">
             {/* height control so image stretch na ho */}
             <div className="relative w-full h-[42vw] min-h-[180px] max-h-[380px] md:h-[320px] lg:h-[360px]">
               {bannerImages.map((src, index) => (
@@ -152,16 +152,9 @@ const Shop = () => {
                     className="w-full h-full object-cover"
                     loading={index === 0 ? "eager" : "lazy"}
                   />
-
-                  {/* soft vignette + gold tint for premium look */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-black/10 to-black/35 mix-blend-multiply" />
-                  <div className="absolute inset-0 bg-gradient-to-tr from-[#ffd27a]/12 via-transparent to-[#ffb347]/10" />
                 </div>
               ))}
             </div>
-
-            {/* bottom gold strip */}
-            <div className="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-transparent via-[#ffd27a] to-transparent opacity-80" />
 
             {/* dots indicator */}
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
@@ -170,7 +163,7 @@ const Shop = () => {
                   key={index}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
                     activeSlide === index
-                      ? "w-5 bg-[#ffd27a]"
+                      ? "w-5 bg-[#4b2c5e]"
                       : "w-2.5 bg-white/80"
                   }`}
                 />

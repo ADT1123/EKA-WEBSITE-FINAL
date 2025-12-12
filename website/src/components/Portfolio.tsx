@@ -4,12 +4,13 @@ import { gsap } from 'gsap';
 import Preloader from './Preloader';
 import Navigation from './Navigation';
 import Hero from './Hero';
-import About from './About';
+import NewArrivals from './NewArrivals';
 import Projects from './Projects';
 import Timeline from './Timeline'; // ← Fixed import path
 import Contact from './Contact';
 import Footer from './Footer';
 import LogoLoop from './LogoLoop';
+import FAQPage from './FAQ';
 
 const Portfolio = () => {
   const [loading, setLoading] = useState(true);
@@ -72,6 +73,14 @@ const Portfolio = () => {
 
           <section id="Timeline">
             <Timeline />
+          </section>
+
+          <section id="NewArrivals">
+            <NewArrivals />
+          </section>
+        
+          <section id = "FAQ">
+            <FAQPage/> 
           </section>
           
           

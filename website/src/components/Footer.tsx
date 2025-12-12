@@ -3,6 +3,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Link } from "react-router-dom";
 
+
 gsap.registerPlugin(ScrollTrigger);
 
 const Footer = () => {
@@ -61,15 +62,14 @@ const Footer = () => {
   const quickLinks = [
     { name: "Home", path: "/" },
     { name: "Featured Products", path: "/shop" },
-    { name: "Customize Gift", path: "/custom" },
-    { name: "Shop Now", path: "/shop" },
-    { name: "Our Services", path: "/services" },
+    { name: "Privacy Policy", path: "/privacy" },
+    { name: "Contact", path: "/contact" },
   ];
 
   const socialButtons = [
-    { name: "Instagram", url: "#" },
-    { name: "Facebook", url: "#" },
-    { name: "Twitter", url: "#" },
+    { name: "Instagram", url: "https://www.instagram.com/ekagifts.in/" },
+    { name: "Facebook", url: "https://www.facebook.com/people/Eka-Gifts/pfbid02UgQx21c7MnZWRGzDzeYdczXy37iXJ3qswNQSyMk5pUd2tQssmJTKRnLXbRLcjsjbl/" },
+    { name: "Linkedin", url: "#" },
   ];
 
   return (
@@ -149,6 +149,7 @@ const Footer = () => {
                   >
                     {link.name}
                   </Link>
+
                 </li>
               ))}
             </ul>
@@ -193,6 +194,7 @@ const Footer = () => {
                 <p className="text-white/80 text-base leading-relaxed">
                   Mumbai, Maharashtra
                 </p>
+
               </div>
             </div>
           </div>

@@ -15,7 +15,8 @@ import CheckoutPage from './pages/CheckoutPage';
 import Contact from "./pages/Contact";
 import ProjectsPage from "./pages/OurProjects";
 import NotFound from "./pages/NotFound";
-import Item1 from "./pages/shops/Item1"
+import Item1 from "./pages/shops/Item1";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/product/:id" element={<Item1 />} />
             <Route path="/About" element={<Aboutpage />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/jewellery" element={<JewelleryComingSoon />} />
             {/* keep custom routes above 404 */}
             <Route path="*" element={<NotFound />} />
