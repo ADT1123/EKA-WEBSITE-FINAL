@@ -37,6 +37,9 @@ const CartPage = () => {
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState<string | null>(null);
 
+  console.log("CART PAGE RENDERED");
+  console.log("CART ITEMS >>>", cart);
+
   const subtotalRaw = useMemo(
     () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
     [cart]
@@ -166,11 +169,12 @@ const CartPage = () => {
 
                   {/* Product Image */}
                   <div className="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden bg-slate-100">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+
                   </div>
 
                   <div className="relative flex-1 pr-2">

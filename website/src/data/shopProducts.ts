@@ -22,7 +22,7 @@ export const shopProducts: ShopProduct[] = [
     description:
       "This all-in-one Vision Board DIY Kit helps you map out your goals, visualize your dream life, and stay motivated throughout the year. Whether you’re focusing on career growth, self-improvement, better habits, or lifestyle upgrades, this kit is your perfect starting point.",
     price: 549,
-    image: "img/visionboard.jpg",
+    image: "/img/visionboard.jpg",
     images: [
       "/img/visionboard-img1.jpg",
       "/img/visionboard-img2.jpg",

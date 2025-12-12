@@ -7,9 +7,9 @@ import { useCart } from "../CartContext";
 
 const bannerImages = [
   "/img/ekabannershop1.png",
-  "/img/ekabannershop1.png",
-  "/img/ekabannershop1.png",
-  "/img/ekabannershop1.png",
+  "/img/4.jpg",
+  "/img/6.jpg",
+  "/img/7.jpg",
 ];
 
 const Shop = () => {
