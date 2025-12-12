@@ -1,8 +1,8 @@
 import { useMemo, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
-import { shopProducts } from "../data/shopProducts";
+import { shopProducts, ShopTag } from "../data/shopProducts";
 import { useCart } from "../CartContext";
 
 const bannerImages = [
@@ -15,14 +15,28 @@ const bannerImages = [
 const Shop = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const [searchParams] = useSearchParams();
+
+  // ✅ initial filter from query (?tag=her / him / corporate)
+  const initialTag = (searchParams.get("tag") as ShopTag | null) || "all";
+  const [activeTag, setActiveTag] = useState<ShopTag | "all">(initialTag);
 
   const products = useMemo(() => shopProducts, []);
+
   const [showToast, setShowToast] = useState(false);
   const [toastProductName, setToastProductName] = useState("");
   const [addingId, setAddingId] = useState<string | null>(null);
   const [isNavbarHidden, setIsNavbarHidden] = useState(false);
-
   const [activeSlide, setActiveSlide] = useState(0);
+
+  // ✅ filtered products by tag
+  const filteredProducts = useMemo(
+    () =>
+      activeTag === "all"
+        ? products
+        : products.filter((p) => p.tags?.includes(activeTag)),
+    [activeTag, products]
+  );
 
   // Navbar scroll hide logic (Shop page only)
   useEffect(() => {
@@ -62,9 +76,14 @@ const Shop = () => {
     if (!product || addingId === id) return;
 
     setAddingId(id);
+
+    // ✅ yaha image blank nahi, actual product.image bhej
     addToCart({
-      id: product.id, name: product.name, price: product.price,
-      image: ""
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      description: product.description,
     });
 
     setToastProductName(product.name);
@@ -115,9 +134,11 @@ const Shop = () => {
 
       <main className="relative z-10 max-w-6xl mx-auto px-4 md:px-6 lg:px-8 pt-28 pb-16">
         {/* banner (no text, auto sliding) */}
-        <div className="mb-10 md:mb-12">
+
+        <div className="mb-8 md:mb-10">
           <div className="relative w-full overflow-hidden rounded-3xl border border-[#ffd27a]/60 bg-slate-50 shadow-[0_22px_65px_rgba(15,23,42,0.22)]">
-            <div className="relative aspect-[16/6] md:aspect-[16/5] w-full">
+            {/* height control so image stretch na ho */}
+            <div className="relative w-full h-[42vw] min-h-[180px] max-h-[380px] md:h-[320px] lg:h-[360px]">
               {bannerImages.map((src, index) => (
                 <div
                   key={index}
@@ -131,11 +152,18 @@ const Shop = () => {
                     className="w-full h-full object-cover"
                     loading={index === 0 ? "eager" : "lazy"}
                   />
+
+                  {/* soft vignette + gold tint for premium look */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-black/10 to-black/35 mix-blend-multiply" />
+                  <div className="absolute inset-0 bg-gradient-to-tr from-[#ffd27a]/12 via-transparent to-[#ffb347]/10" />
                 </div>
               ))}
             </div>
 
-            {/* small dots indicator */}
+            {/* bottom gold strip */}
+            <div className="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-transparent via-[#ffd27a] to-transparent opacity-80" />
+
+            {/* dots indicator */}
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
               {bannerImages.map((_, index) => (
                 <span
@@ -143,7 +171,7 @@ const Shop = () => {
                   className={`h-1.5 rounded-full transition-all duration-300 ${
                     activeSlide === index
                       ? "w-5 bg-[#ffd27a]"
-                      : "w-2.5 bg-white/70"
+                      : "w-2.5 bg-white/80"
                   }`}
                 />
               ))}
@@ -151,10 +179,34 @@ const Shop = () => {
           </div>
         </div>
 
+
+        {/* ✅ filter buttons */}
+        <div className="mb-8 flex flex-wrap gap-3">
+          {[
+            { key: "all", label: "All" },
+            { key: "her", label: "For her" },
+            { key: "him", label: "For him" },
+            { key: "corporate", label: "Corporate" },
+          ].map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              onClick={() => setActiveTag(f.key as any)}
+              className={`px-4 py-2 rounded-full text-xs md:text-sm font-medium border transition-all ${
+                activeTag === f.key
+                  ? "bg-[#4b2c5e] text-white border-[#4b2c5e]"
+                  : "bg-white text-slate-800 border-slate-200 hover:border-[#ffd27a]"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
         {/* product grid */}
         <div className="relative">
           <div className="relative z-10 grid gap-7 md:gap-8 lg:gap-9 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {products.map((product) => {
+            {filteredProducts.map((product) => {
               const isAdding = addingId === product.id;
               return (
                 <div
