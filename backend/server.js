@@ -13,6 +13,7 @@ app.use(
       "http://localhost:3000",
       "http://localhost:5173",
       "http://localhost:8080",
+      "http://localhost:8081",
       "https://www.ekagifts.com",
       "https://ekagifts.com",
     ],
@@ -22,15 +23,16 @@ app.use(
 );
 app.use(express.json());
 
-// 👇 IMPORTANT
+// ADMIN ROUTES
 app.use('/api/admin', adminRoutes);
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' });
+// health check
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok" });
 });
 
-mongoose
-  .connect(process.env.MONGODB_URI)
+// Mongo + other routes
+mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.error('❌ MongoDB Error:', err));
 

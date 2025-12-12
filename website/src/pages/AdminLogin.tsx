@@ -1,7 +1,7 @@
 // pages/AdminLogin.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "../apiConfig";
+import { API_BASE_URL } from "../apiConfig.ts";
 
 const AdminLogin = () => {
   const [username, setUsername] = useState("");
