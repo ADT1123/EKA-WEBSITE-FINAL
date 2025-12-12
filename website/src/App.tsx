@@ -3,10 +3,12 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "./CartContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import TermsAndConditions from './pages/tnc';
 import Shop from "./pages/Shop";
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard';
 import JewelleryComingSoon from "./pages/jewellery"
 import OrderSuccess from './pages/OrderSuccess';
 import Aboutpage from "./pages/Aboutpage";
@@ -20,6 +22,17 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 const queryClient = new QueryClient();
 
+// 🛡️ Protected Route Component for Admin
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const token = localStorage.getItem('adminToken');
+  
+  if (!token) {
+    return <Navigate to="/admin-login" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -30,6 +43,18 @@ const App = () => (
         {/* 🔴 CartProvider MUST wrap routes that use cart */}
         <CartProvider>
           <Routes>
+            {/* 🆕 ADMIN ROUTES */}
+            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* ✅ Existing Public Routes */}
             <Route path="/" element={<Index />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/projects" element={<ProjectsPage />} />
@@ -42,6 +67,7 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/jewellery" element={<JewelleryComingSoon />} />
+
             {/* keep custom routes above 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>

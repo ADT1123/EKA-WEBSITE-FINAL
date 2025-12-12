@@ -10,11 +10,11 @@ const Hero = () => {
   let currentIndex = useRef(0);
 
   const heroImages = [
-    '/img/ekalifestyle.jpg',
-    '/img/Ekajewelery.jpg', 
+    '/img/3.jpg',
+    '/img/2.jpg', 
     '/img/ekacalendar.jpg',
     '/img/visionboard.jpg',
-    '/img/minicalendar.jpg'
+    '/img/ekahero.jpg'
   ];
 
   useEffect(() => {
