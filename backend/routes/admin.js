@@ -1,3 +1,4 @@
+// routes/admin.js
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const adminAuth = require('../middleware/adminAuth');
@@ -28,18 +29,21 @@ router.get('/orders', adminAuth, async (req, res) => {
     const orders = await Order.find().sort({ createdAt: -1 }).limit(100);
     res.json(orders);
   } catch (e) {
+    console.error(e);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// UPDATE ORDER (payment status / delivery status)
+// UPDATE ORDER (payment / delivery / checked / notes)
 const updateOrder = async (req, res) => {
   try {
-    const { status, deliveryStatus } = req.body;
+    const { status, deliveryStatus, isChecked, notes } = req.body;
 
     const update = {};
-    if (status) update.status = status;
-    if (deliveryStatus) update.deliveryStatus = deliveryStatus;
+    if (status !== undefined) update.status = status;
+    if (deliveryStatus !== undefined) update.deliveryStatus = deliveryStatus;
+    if (isChecked !== undefined) update.isChecked = isChecked;
+    if (notes !== undefined) update.notes = notes;
 
     const order = await Order.findByIdAndUpdate(
       req.params.id,
@@ -66,6 +70,7 @@ router.delete('/orders/:id', adminAuth, async (req, res) => {
     await Order.findByIdAndDelete(req.params.id);
     res.json({ ok: true });
   } catch (e) {
+    console.error(e);
     res.status(500).json({ message: 'Server error' });
   }
 });

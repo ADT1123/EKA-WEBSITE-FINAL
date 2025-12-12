@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../apiConfig';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import JsBarcode from 'jsbarcode';
 
 interface OrderItem {
   id: string;
@@ -26,6 +27,8 @@ interface Order {
   totalAmount: number;
   status: 'paid' | 'pending' | 'failed' | string;
   deliveryStatus?: 'ordered' | 'dispatched' | 'shipped' | 'delivered';
+  isChecked?: boolean;
+  notes?: string;
   couponCode?: string;
   createdAt: string;
   razorpayOrderId?: string;
@@ -41,12 +44,14 @@ const AdminDashboard = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [deliveryFilter, setDeliveryFilter] = useState('');
   const [couponFilter, setCouponFilter] = useState('');
+  const [checkedFilter, setCheckedFilter] = useState('');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [sortBy, setSortBy] = useState('date-desc');
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Order | null>(null);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [editingNotes, setEditingNotes] = useState<{ id: string; text: string } | null>(null);
 
   const navigate = useNavigate();
 
@@ -81,20 +86,28 @@ const AdminDashboard = () => {
     }
   };
 
+  const patchOrder = async (id: string, payload: Record<string, any>) => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
+
+    const res = await fetch(`${API_BASE_URL}/api/admin/orders/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      console.error(await res.text());
+      throw new Error('PATCH failed');
+    }
+  };
+
   const updateStatus = async (id: string, newStatus: string) => {
     try {
-      const token = localStorage.getItem('adminToken');
-      if (!token) return;
-
-      await fetch(`${API_BASE_URL}/api/admin/orders/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
+      await patchOrder(id, { status: newStatus });
       await fetchOrders();
       setMenuOpen(null);
     } catch {
@@ -104,22 +117,30 @@ const AdminDashboard = () => {
 
   const updateDeliveryStatus = async (id: string, newDeliveryStatus: string) => {
     try {
-      const token = localStorage.getItem('adminToken');
-      if (!token) return;
-
-      await fetch(`${API_BASE_URL}/api/admin/orders/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ deliveryStatus: newDeliveryStatus }),
-      });
-
+      await patchOrder(id, { deliveryStatus: newDeliveryStatus });
       await fetchOrders();
       setMenuOpen(null);
     } catch {
       alert('Failed to update delivery status');
+    }
+  };
+
+  const toggleChecked = async (id: string, currentValue: boolean) => {
+    try {
+      await patchOrder(id, { isChecked: !currentValue });
+      await fetchOrders();
+    } catch {
+      alert('Failed to update order status');
+    }
+  };
+
+  const saveNotes = async (id: string, notes: string) => {
+    try {
+      await patchOrder(id, { notes });
+      await fetchOrders();
+      setEditingNotes(null);
+    } catch {
+      alert('Failed to save notes');
     }
   };
 
@@ -129,16 +150,127 @@ const AdminDashboard = () => {
       const token = localStorage.getItem('adminToken');
       if (!token) return;
 
-      await fetch(`${API_BASE_URL}/api/admin/orders/${confirmDelete._id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/orders/${confirmDelete._id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      if (!res.ok) {
+        console.error(await res.text());
+        throw new Error('Delete failed');
+      }
 
       setConfirmDelete(null);
       await fetchOrders();
     } catch {
       alert('Failed to delete order');
     }
+  };
+
+  // Shipping label: half A4, no weight/dimensions/courier
+  const generateShippingLabel = (order: Order) => {
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+    const marginX = 10;
+    let y = 15;
+
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('EKA GIFTS', 105, y, { align: 'center' });
+    y += 6;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('www.ekagifts.com', 105, y, { align: 'center' });
+    y += 10;
+
+    // barcode
+    const canvas = document.createElement('canvas');
+    JsBarcode(canvas, order.orderId, {
+      format: 'CODE128',
+      width: 1.6,
+      height: 25,
+      displayValue: true,
+      fontSize: 10,
+    });
+    const barcodeImg = canvas.toDataURL('image/png');
+    doc.addImage(barcodeImg, 'PNG', marginX + 20, y, 110, 25);
+    y += 35;
+
+    // FROM
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('FROM:', marginX, y);
+    y += 5;
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('EKA Gifts', marginX, y);
+    y += 5;
+    doc.text('[Your Address Line 1]', marginX, y);
+    y += 5;
+    doc.text('[Your Address Line 2]', marginX, y);
+    y += 5;
+    doc.text('[City, State, PIN]', marginX, y);
+    y += 10;
+
+    // TO
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('SHIP TO:', marginX, y);
+    y += 7;
+
+    doc.setFontSize(11);
+    doc.text(order.customerName.toUpperCase(), marginX, y);
+    y += 6;
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    const addrLines = doc.splitTextToSize(order.address, 180 - marginX * 2);
+    addrLines.forEach((line: string) => {
+      doc.text(line, marginX, y);
+      y += 5;
+    });
+
+    y += 2;
+    doc.text(`Phone: ${order.phone}`, marginX, y);
+    y += 5;
+    doc.text(`Email: ${order.email}`, marginX, y);
+    y += 8;
+
+    // order details box - stays in upper half
+    const boxTop = y;
+    const boxHeight = 30;
+
+    doc.setDrawColor(180);
+    doc.setLineWidth(0.3);
+    doc.rect(marginX, boxTop, 190 - marginX * 2, boxHeight);
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Order ID: ${order.orderId}`, marginX + 4, boxTop + 7);
+    doc.text(
+      `Order Date: ${new Date(order.createdAt).toLocaleDateString('en-IN')}`,
+      marginX + 4,
+      boxTop + 13
+    );
+    doc.text(`Payment: ${order.status.toUpperCase()}`, marginX + 4, boxTop + 19);
+    doc.text(
+      `Total: ₹${order.totalAmount.toLocaleString('en-IN')}`,
+      marginX + 4,
+      boxTop + 25
+    );
+    doc.text(`Items: ${order.items.length}`, marginX + 70, boxTop + 7);
+
+    // footer
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    doc.text('Handle with care', 105, boxTop + boxHeight + 10, {
+      align: 'center',
+    });
+
+    // only upper half used – rest blank
+    doc.save(`ShippingLabel_${order.orderId}.pdf`);
   };
 
   // FILTER + SORT
@@ -155,20 +287,31 @@ const AdminDashboard = () => {
         o.address.toLowerCase().includes(q) ||
         (o.razorpayOrderId || '').toLowerCase().includes(q) ||
         (o.paymentId || '').toLowerCase().includes(q) ||
-        (o.couponCode || '').toLowerCase().includes(q);
+        (o.couponCode || '').toLowerCase().includes(q) ||
+        (o.notes || '').toLowerCase().includes(q);
 
       const matchesStatus = !statusFilter || o.status === statusFilter;
       const matchesDelivery = !deliveryFilter || o.deliveryStatus === deliveryFilter;
       const matchesCoupon =
         !couponFilter ||
         (couponFilter === 'with-coupon' ? !!o.couponCode : !o.couponCode);
+      const matchesChecked =
+        !checkedFilter ||
+        (checkedFilter === 'checked' ? !!o.isChecked : !o.isChecked);
 
       const d = new Date(o.createdAt);
       const matchesDate =
         (!dateRange.start || d >= new Date(dateRange.start)) &&
         (!dateRange.end || d <= new Date(dateRange.end));
 
-      return matchesSearch && matchesStatus && matchesDelivery && matchesCoupon && matchesDate;
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesDelivery &&
+        matchesCoupon &&
+        matchesChecked &&
+        matchesDate
+      );
     });
 
     list.sort((a, b) => {
@@ -191,7 +334,7 @@ const AdminDashboard = () => {
     });
 
     return list;
-  }, [orders, search, statusFilter, deliveryFilter, couponFilter, dateRange, sortBy]);
+  }, [orders, search, statusFilter, deliveryFilter, couponFilter, checkedFilter, dateRange, sortBy]);
 
   // STATS
   const totalOrders = filteredOrders.length;
@@ -214,6 +357,8 @@ const AdminDashboard = () => {
       'Total Amount': o.totalAmount,
       'Payment Status': o.status,
       'Delivery Status': o.deliveryStatus || '-',
+      Checked: o.isChecked ? 'Yes' : 'No',
+      Notes: o.notes || '-',
       'Coupon Code': o.couponCode || '-',
       'Razorpay Order ID': o.razorpayOrderId || '-',
       'Payment ID': o.paymentId || '-',
@@ -239,13 +384,13 @@ const AdminDashboard = () => {
       `₹${o.totalAmount}`,
       o.status,
       o.deliveryStatus || '-',
-      o.couponCode || '-',
+      o.isChecked ? 'Yes' : 'No',
       new Date(o.createdAt).toLocaleDateString('en-IN'),
     ]);
 
     autoTable(doc, {
       startY: 32,
-      head: [['EKA ID', 'Customer', 'Amount', 'Payment', 'Delivery', 'Coupon', 'Date']],
+      head: [['EKA ID', 'Customer', 'Amount', 'Payment', 'Delivery', 'Checked', 'Date']],
       body,
       styles: { fontSize: 8 },
     });
@@ -258,6 +403,7 @@ const AdminDashboard = () => {
     setStatusFilter('');
     setDeliveryFilter('');
     setCouponFilter('');
+    setCheckedFilter('');
     setDateRange({ start: '', end: '' });
     setSortBy('date-desc');
   };
@@ -295,7 +441,7 @@ const AdminDashboard = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+      <main className="max-w-[1600px] mx-auto px-6 py-6 space-y-6">
         {/* Metrics */}
         <section className="grid gap-4 md:grid-cols-4">
           <div className="rounded-xl bg-white border border-slate-200 p-4">
@@ -332,7 +478,7 @@ const AdminDashboard = () => {
           <div className="flex flex-col md:flex-row gap-3">
             <input
               type="text"
-              placeholder="Search EKA ID, name, email, phone, address, coupon, Razorpay…"
+              placeholder="Search EKA ID, name, email, phone, address, notes, coupon…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="flex-1 px-3 py-2 text-sm rounded-md border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
@@ -345,8 +491,8 @@ const AdminDashboard = () => {
             </button>
           </div>
 
-          {/* Row of dropdowns */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {/* Filters row */}
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -368,6 +514,16 @@ const AdminDashboard = () => {
               <option value="dispatched">Dispatched</option>
               <option value="shipped">Shipped</option>
               <option value="delivered">Delivered</option>
+            </select>
+
+            <select
+              value={checkedFilter}
+              onChange={(e) => setCheckedFilter(e.target.value)}
+              className="px-3 py-2 text-xs rounded-md border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-400"
+            >
+              <option value="">Order status</option>
+              <option value="checked">Checked</option>
+              <option value="unchecked">Unchecked</option>
             </select>
 
             <select
@@ -447,13 +603,14 @@ const AdminDashboard = () => {
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr className="text-xs text-slate-500 uppercase tracking-wide">
+                  <th className="px-4 py-3 text-center">✓</th>
                   <th className="px-4 py-3 text-left">EKA ID</th>
                   <th className="px-4 py-3 text-left">Customer</th>
                   <th className="px-4 py-3 text-left">Address</th>
                   <th className="px-4 py-3 text-left">Amount</th>
-                  <th className="px-4 py-3 text-left">Coupon</th>
                   <th className="px-4 py-3 text-left">Payment</th>
                   <th className="px-4 py-3 text-left">Delivery</th>
+                  <th className="px-4 py-3 text-left">Notes</th>
                   <th className="px-4 py-3 text-left">Date</th>
                   <th className="px-4 py-3 text-left">Actions</th>
                 </tr>
@@ -479,6 +636,14 @@ const AdminDashboard = () => {
 
                   return (
                     <tr key={o._id} className="hover:bg-slate-50">
+                      <td className="px-4 py-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={!!o.isChecked}
+                          onChange={() => toggleChecked(o._id, !!o.isChecked)}
+                          className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                        />
+                      </td>
                       <td className="px-4 py-3 align-top">
                         <div className="font-mono text-xs font-semibold text-slate-900">
                           {o.orderId}
@@ -503,14 +668,10 @@ const AdminDashboard = () => {
                         <div className="text-sm font-semibold text-slate-900">
                           ₹{o.totalAmount.toLocaleString('en-IN')}
                         </div>
-                      </td>
-                      <td className="px-4 py-3 align-top">
-                        {o.couponCode ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-800 border border-slate-300">
+                        {o.couponCode && (
+                          <span className="inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">
                             {o.couponCode}
                           </span>
-                        ) : (
-                          <span className="text-[11px] text-slate-400">None</span>
                         )}
                       </td>
                       <td className="px-4 py-3 align-top">
@@ -526,6 +687,44 @@ const AdminDashboard = () => {
                         >
                           {dStatus.toUpperCase()}
                         </span>
+                      </td>
+                      <td className="px-4 py-3 align-top max-w-xs">
+                        {editingNotes && editingNotes.id === o._id ? (
+                          <div className="flex gap-1">
+                            <input
+                              type="text"
+                              value={editingNotes.text}
+                              onChange={(e) =>
+                                setEditingNotes({ id: o._id, text: e.target.value })
+                              }
+                              className="flex-1 px-2 py-1 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-slate-400"
+                              autoFocus
+                            />
+                            <button
+                              onClick={() => saveNotes(o._id, editingNotes.text)}
+                              className="px-2 py-1 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-500"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => setEditingNotes(null)}
+                              className="px-2 py-1 text-xs bg-slate-200 text-slate-700 rounded hover:bg-slate-300"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          <div
+                            onClick={() =>
+                              setEditingNotes({ id: o._id, text: o.notes || '' })
+                            }
+                            className="text-xs text-slate-600 cursor-pointer hover:bg-slate-100 p-1 rounded line-clamp-2"
+                          >
+                            {o.notes && o.notes.trim().length > 0
+                              ? o.notes
+                              : 'Click to add notes...'}
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3 align-top text-[11px] text-slate-500">
                         {new Date(o.createdAt).toLocaleDateString('en-IN')}
@@ -547,12 +746,21 @@ const AdminDashboard = () => {
                         </button>
 
                         {menuOpen === o._id && (
-                          <div className="absolute right-0 mt-2 w-52 rounded-md border border-slate-200 bg-white shadow-md z-50">
+                          <div className="absolute right-0 mt-2 w-56 rounded-md border border-slate-200 bg-white shadow-lg z-50">
                             <button
                               onClick={() => setSelectedOrder(o)}
                               className="w-full px-4 py-2 text-left text-xs text-slate-800 hover:bg-slate-50"
                             >
                               View details
+                            </button>
+                            <button
+                              onClick={() => {
+                                generateShippingLabel(o);
+                                setMenuOpen(null);
+                              }}
+                              className="w-full px-4 py-2 text-left text-xs text-blue-700 hover:bg-blue-50 border-t border-slate-200"
+                            >
+                              📦 Generate shipping label
                             </button>
                             <div className="border-t border-slate-200">
                               <p className="px-4 pt-2 text-[10px] font-semibold text-slate-500 uppercase">
@@ -576,9 +784,7 @@ const AdminDashboard = () => {
                                 (status) => (
                                   <button
                                     key={status}
-                                    onClick={() =>
-                                      updateDeliveryStatus(o._id, status)
-                                    }
+                                    onClick={() => updateDeliveryStatus(o._id, status)}
                                     className="w-full px-4 py-1.5 text-left text-xs text-slate-800 hover:bg-slate-50"
                                   >
                                     {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -655,8 +861,8 @@ const AdminDashboard = () => {
                   {['ordered', 'dispatched', 'shipped', 'delivered'].map(
                     (status, idx) => {
                       const current = selectedOrder.deliveryStatus || 'ordered';
-                      const order = ['ordered', 'dispatched', 'shipped', 'delivered'];
-                      const currentIndex = order.indexOf(current);
+                      const orderSteps = ['ordered', 'dispatched', 'shipped', 'delivered'];
+                      const currentIndex = orderSteps.indexOf(current);
                       const isPassed = currentIndex >= idx;
                       const isActive = currentIndex === idx;
 
@@ -670,9 +876,9 @@ const AdminDashboard = () => {
                                   : 'bg-white border-slate-300'
                               }`}
                             />
-                            {idx < order.length - 1 && (
+                            {idx < orderSteps.length - 1 && (
                               <div
-                                className={`w-px flex-1 mt-1 ${
+                                className={`w-px h-8 mt-1 ${
                                   isPassed ? 'bg-emerald-400' : 'bg-slate-300'
                                 }`}
                               />
@@ -799,6 +1005,24 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
+
+              {selectedOrder.notes && selectedOrder.notes.trim().length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[11px] font-semibold uppercase text-slate-500">
+                    Admin notes
+                  </p>
+                  <div className="rounded-lg border border-slate-200 bg-amber-50 p-3">
+                    <p className="text-xs text-slate-800">{selectedOrder.notes}</p>
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={() => generateShippingLabel(selectedOrder)}
+                className="w-full px-4 py-3 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-500"
+              >
+                📦 Generate shipping label
+              </button>
             </div>
           </div>
         </div>

@@ -10,18 +10,30 @@ const orderSchema = new mongoose.Schema({
   items: Array,
   totalAmount: Number,
 
-  // payment status
+  // Payment status
   status: {
     type: String,
     default: 'pending',
     enum: ['pending', 'paid', 'failed'],
   },
 
-  // delivery status (yehi field React update kar raha hai)
+  // Delivery status
   deliveryStatus: {
     type: String,
     default: 'ordered',
     enum: ['ordered', 'dispatched', 'shipped', 'delivered'],
+  },
+
+  // Admin dashboard: order checked / unchecked
+  isChecked: {
+    type: Boolean,
+    default: false,
+  },
+
+  // Admin dashboard: notes
+  notes: {
+    type: String,
+    default: '',
   },
 
   couponCode: String,
