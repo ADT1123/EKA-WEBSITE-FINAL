@@ -59,7 +59,6 @@ const Hero = () => {
           className="absolute inset-0 w-full h-full object-cover"
         />
         {/* dark/gradient overlay for mobile readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-black/0 md:from-black/30" />
       </div>
 
       {/* CTA */}
