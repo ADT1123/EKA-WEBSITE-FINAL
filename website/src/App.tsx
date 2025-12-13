@@ -5,6 +5,7 @@ import { CartProvider } from "./CartContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
+import ShippingPolicy from './pages/ShippingPolicy';
 import TermsAndConditions from './pages/tnc';
 import Shop from "./pages/Shop";
 import AdminLogin from './pages/AdminLogin';
@@ -64,6 +65,7 @@ const App = () => (
             <Route path="/order-success" element={<OrderSuccess />} />
             <Route path="/product/:id" element={<Item1 />} />
             <Route path="/About" element={<Aboutpage />} />
+            <Route path="/shipping-policy" element={<ShippingPolicy />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/jewellery" element={<JewelleryComingSoon />} />
