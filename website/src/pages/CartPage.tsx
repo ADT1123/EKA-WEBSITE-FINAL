@@ -1,31 +1,10 @@
-import { useMemo, useState } from "react";
+// pages/CartPage.tsx
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../CartContext";
 import Navbar from "../components/Navigation";
 
-interface CouponRule {
-  label: string;
-  getDiscount: (subtotal: number) => number;
-  minSubtotal?: number;
-}
-
-const COUPONS: Record<string, CouponRule> = {
-  FLATEKA10: {
-    label: "Flat 10% off",
-    getDiscount: (subtotal) => Math.round(subtotal * 0.1),
-    minSubtotal: 400,
-  },
-  CHINEKA102345672344: {
-    label: "Flat 99% off",
-    getDiscount: (subtotal) => Math.round(subtotal * .999),
-    minSubtotal: 200,
-  },
-  EKA200: {
-    label: "₹200 off",
-    getDiscount: () => 200,
-    minSubtotal: 1000,
-  },
-};
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 const CartPage = () => {
   const {
@@ -41,9 +20,8 @@ const CartPage = () => {
 
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState<string | null>(null);
-
-  console.log("CART PAGE RENDERED");
-  console.log("CART ITEMS >>>", cart);
+  const [couponLabel, setCouponLabel] = useState<string>("");
+  const [loading, setLoading] = useState(false);
 
   const subtotalRaw = useMemo(
     () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -55,21 +33,7 @@ const CartPage = () => {
     [cart]
   );
 
-  const effectiveDiscount = useMemo(() => {
-    if (!appliedCoupon) return 0;
-    const rule = COUPONS[appliedCoupon];
-    if (!rule) return 0;
-    if (rule.minSubtotal && subtotalRaw < rule.minSubtotal) return 0;
-    const d = rule.getDiscount(subtotalRaw);
-    return Math.min(d, subtotalRaw);
-  }, [appliedCoupon, subtotalRaw]);
-
-  // keep context discount in sync
-  if (discount !== effectiveDiscount) {
-    setDiscount(effectiveDiscount);
-  }
-
-  const subtotal = subtotalRaw - effectiveDiscount;
+  const subtotal = subtotalRaw - discount;
 
   const handleGoHome = () => navigate("/shop");
   const handleCheckout = () => navigate("/checkout");
@@ -83,7 +47,7 @@ const CartPage = () => {
     updateQuantity(id, currentQty + 1);
   };
 
-  const handleApplyCoupon = () => {
+  const handleApplyCoupon = async () => {
     const trimmed = couponCode.trim().toUpperCase();
 
     if (!trimmed) {
@@ -93,33 +57,43 @@ const CartPage = () => {
       return;
     }
 
-    const rule = COUPONS[trimmed];
-    if (!rule) {
-      setCouponError("This code is not valid.");
-      setAppliedCoupon(null);
-      setDiscount(0);
-      return;
-    }
-
-    if (rule.minSubtotal && subtotalRaw < rule.minSubtotal) {
-      setCouponError(
-        `Minimum order value for this code is ₹${rule.minSubtotal}.`
-      );
-      setAppliedCoupon(null);
-      setDiscount(0);
-      return;
-    }
-
-    const d = rule.getDiscount(subtotalRaw);
-    setAppliedCoupon(trimmed);
-    setDiscount(Math.min(d, subtotalRaw));
+    setLoading(true);
     setCouponError(null);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/coupons/validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: trimmed, subtotal: subtotalRaw }),
+      });
+
+      const data = await res.json();
+
+      if (data.valid) {
+        setAppliedCoupon(data.coupon.code);
+        setDiscount(data.coupon.discount);
+        setCouponLabel(data.coupon.label);
+        setCouponError(null);
+      } else {
+        setCouponError(data.message || "Invalid coupon");
+        setAppliedCoupon(null);
+        setDiscount(0);
+      }
+    } catch (error) {
+      console.error("Coupon validation error:", error);
+      setCouponError("Failed to validate coupon. Please try again.");
+      setAppliedCoupon(null);
+      setDiscount(0);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null);
     setCouponCode("");
     setCouponError(null);
+    setCouponLabel("");
     setDiscount(0);
   };
 
@@ -134,7 +108,7 @@ const CartPage = () => {
       <Navbar />
 
       <main className="relative z-10 max-w-5xl mx-auto px-4 md:px-6 lg:px-8 pt-24 pb-16">
-        {/* header moved down + simplified */}
+        {/* header */}
         <div className="mb-12 flex items-center justify-between gap-3">
           <div className="pt-2">
             <span className="text-lg md:text-xl font-bold text-slate-900 block">
@@ -174,12 +148,11 @@ const CartPage = () => {
 
                   {/* Product Image */}
                   <div className="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden bg-slate-100">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
                   </div>
 
                   <div className="relative flex-1 pr-2">
@@ -198,9 +171,7 @@ const CartPage = () => {
                         </span>
                         <button
                           type="button"
-                          onClick={() =>
-                            handleDecrease(item.id, item.quantity)
-                          }
+                          onClick={() => handleDecrease(item.id, item.quantity)}
                           className="w-6 h-6 flex items-center justify-center rounded-full border border-slate-200 text-xs text-slate-700 hover:border-[#b98a46] hover:text-[#6b4e31] transition-colors disabled:opacity-40"
                           disabled={item.quantity <= 1}
                         >
@@ -211,9 +182,7 @@ const CartPage = () => {
                         </span>
                         <button
                           type="button"
-                          onClick={() =>
-                            handleIncrease(item.id, item.quantity)
-                          }
+                          onClick={() => handleIncrease(item.id, item.quantity)}
                           className="w-6 h-6 flex items-center justify-center rounded-full border border-slate-200 text-xs text-slate-700 hover:border-[#b98a46] hover:text-[#6b4e31] transition-colors"
                         >
                           +
@@ -230,8 +199,7 @@ const CartPage = () => {
                     </div>
 
                     <p className="mt-2 text-xs md:text-sm text-slate-500">
-                      Product cost: {" "} 
-                      <span className="font-medium">₹{item.price}</span>
+                      Product cost: <span className="font-medium">₹{item.price}</span>
                     </p>
                   </div>
 
@@ -266,7 +234,8 @@ const CartPage = () => {
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
                     placeholder="Coupon code"
-                    className="flex-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs md:text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#ffd27a] focus:border-[#ffd27a]"
+                    disabled={loading}
+                    className="flex-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs md:text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#ffd27a] focus:border-[#ffd27a] disabled:opacity-50"
                   />
                   {appliedCoupon ? (
                     <button
@@ -280,43 +249,39 @@ const CartPage = () => {
                     <button
                       type="button"
                       onClick={handleApplyCoupon}
-                      className="px-3 py-1.5 rounded-full text-[11px] font-semibold bg-slate-900 text-white hover:bg-slate-800 transition-colors"
+                      disabled={loading}
+                      className="px-3 py-1.5 rounded-full text-[11px] font-semibold bg-slate-900 text-white hover:bg-slate-800 transition-colors disabled:opacity-50 flex items-center gap-1"
                     >
+                      {loading && (
+                        <span className="inline-block h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      )}
                       Apply
                     </button>
                   )}
                 </div>
-                {appliedCoupon && effectiveDiscount > 0 && (
+                {appliedCoupon && discount > 0 && (
                   <p className="mt-1.5 text-[11px] text-emerald-600">
-                    {COUPONS[appliedCoupon].label}. You save ₹{effectiveDiscount}.
+                    {couponLabel}. You save ₹{discount}.
                   </p>
                 )}
                 {couponError && (
-                  <p className="mt-1.5 text-[11px] text-pink-600">
-                    {couponError}
-                  </p>
+                  <p className="mt-1.5 text-[11px] text-pink-600">{couponError}</p>
                 )}
               </div>
 
               <div className="border-t border-slate-100 pt-3 space-y-2 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-slate-600">Quantity</span>
-                  <span className="text-slate-700">
-                    {totalItems}{totalItems > 1 ? " " : ""}
-                  </span>
+                  <span className="text-slate-700">{totalItems}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-600">Items subtotal</span>
-                  <span className="font-medium text-slate-900">
-                    ₹{subtotalRaw}
-                  </span>
+                  <span className="font-medium text-slate-900">₹{subtotalRaw}</span>
                 </div>
-                {effectiveDiscount > 0 && (
+                {discount > 0 && (
                   <div className="flex items-center justify-between">
                     <span className="text-slate-600">Coupon savings</span>
-                    <span className="text-emerald-600 font-medium">
-                      −₹{effectiveDiscount}
-                    </span>
+                    <span className="text-emerald-600 font-medium">−₹{discount}</span>
                   </div>
                 )}
                 <div className="flex items-center justify-between">
@@ -329,7 +294,7 @@ const CartPage = () => {
 
               <div className="border-t border-slate-100 pt-3 flex items-center justify-between">
                 <span className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                 Total
+                  Total
                 </span>
                 <span className="text-base md:text-lg font-semibold text-slate-900">
                   ₹{subtotal}
@@ -356,14 +321,6 @@ const CartPage = () => {
           </div>
         )}
       </main>
-
-      <style>{`
-        @keyframes couponPulse {
-          0% { transform: scale(0.92); opacity: 0; }
-          40% { transform: scale(1.04); opacity: 1; }
-          100% { transform: scale(1); opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 };
