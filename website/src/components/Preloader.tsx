@@ -41,7 +41,7 @@ const CleanPreloader = ({ onComplete }: PreloaderProps) => {
   return (
     <div
       ref={preloaderRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#fdf9ff]"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#ffffff]"
     >
       <div className="w-[160px] sm:w-[190px] md:w-[220px] lg:w-[240px] max-w-[70vw]">
         <img
