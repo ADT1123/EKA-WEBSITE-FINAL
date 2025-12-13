@@ -24,8 +24,7 @@ const Navigation = () => {
     const handleScroll = () => {
       const y = window.scrollY;
       setScrolled(y > 40);
-      
-      // Logo fade on scroll
+
       if (logoRef.current) {
         const opacity = Math.max(0.3, 1 - y / 300);
         gsap.to(logoRef.current, {
@@ -51,7 +50,7 @@ const Navigation = () => {
       gsap.fromTo(
         ".mobile-nav-item",
         { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.3, stagger: 0.1, delay: 0.2 }
+        { opacity: 1, y: 0, duration: 0.3, stagger: 0.08, delay: 0.15 }
       );
     }
   }, [isOpen]);
@@ -95,10 +94,7 @@ const Navigation = () => {
         <div className="px-4 md:px-6 py-2.5">
           <div className="flex justify-between items-center">
             {/* Logo */}
-            <Link
-              to="/"
-              className="group flex items-center z-10"
-            >
+            <Link to="/" className="group flex items-center z-10">
               <div ref={logoRef} className="flex items-center">
                 <img
                   src="/img/EKAlogo.png"
@@ -165,71 +161,89 @@ const Navigation = () => {
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-9 h-9 rounded-xl bg-white/90 border border-white/70 flex items-center justify-center shadow-sm hover:bg-[#4b2c5e] hover:border-[#4b2c5e] transition-all duration-300 group"
               >
-                <List size={20} className="text-[#4b2c5e] group-hover:text-white transition-colors" weight="bold" />
+                <List
+                  size={20}
+                  className="text-[#4b2c5e] group-hover:text-white transition-colors"
+                  weight="bold"
+                />
               </button>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu – premium solid panel */}
       {isOpen && (
         <div className="fixed inset-0 z-[10000] md:hidden">
+          {/* Dark overlay */}
           <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/55"
             onClick={() => setIsOpen(false)}
           />
 
-          <div className="mobile-menu absolute right-0 top-0 h-full w-72 max-w-full bg-white/98 backdrop-blur-xl border-l border-[#ffd27a]/30 shadow-2xl">
-            <div className="p-6 border-b border-[#ffd27a]/20 flex justify-between items-center">
-              <span className="text-slate-900 font-bold text-lg tracking-wide">Menu</span>
+          {/* Slide-in panel */}
+          <div className="mobile-menu absolute right-0 top-0 h-full w-72 max-w-full bg-[#0f172a] text-white shadow-2xl">
+            {/* Header */}
+            <div className="p-5 border-b border-white/10 flex justify-between items-center">
+              <span className="text-sm font-semibold tracking-[0.18em] uppercase text-white/70">
+                Menu
+              </span>
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-8 h-8 rounded-lg bg-[#4b2c5e]/10 flex items-center justify-center hover:bg-[#4b2c5e] transition-all duration-300 group"
+                className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/15 transition-all duration-200"
               >
-                <X size={16} className="text-[#4b2c5e] group-hover:text-white transition-colors" weight="bold" />
+                <X size={16} className="text-white" weight="bold" />
               </button>
             </div>
 
-            <nav className="p-6 space-y-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  onClick={() => setIsOpen(false)}
-                  className={`mobile-nav-item block py-3 px-4 rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 ${
-                    location.pathname === item.href
-                      ? "bg-gradient-to-r from-[#4b2c5e] to-[#6b4e7d] text-white shadow-lg"
-                      : "text-slate-700 hover:bg-[#ffd27a]/20 hover:text-[#4b2c5e]"
-                  }`}
-                >
-                  {item.name}
-                </Link>
-              ))}
+            {/* Links */}
+            <nav className="p-5 space-y-2">
+              {navItems.map((item) => {
+                const active = location.pathname === item.href;
+                return (
+                  <button
+                    key={item.name}
+                    onClick={() => handleNavClick(item.href, item.isPage)}
+                    className={`mobile-nav-item w-full flex items-center justify-between py-3 px-4 rounded-xl text-sm font-semibold tracking-wide text-left transition-all duration-200 ${
+                      active
+                        ? "bg-white text-[#0f172a] shadow-md"
+                        : "bg-transparent text-white/80 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    <span>{item.name}</span>
+                    {active && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#facc15]" />
+                    )}
+                  </button>
+                );
+              })}
 
               {/* Cart in Mobile Menu */}
-              <Link
-                to="/cart"
-                onClick={() => setIsOpen(false)}
-                className={`mobile-nav-item flex items-center justify-between py-3 px-4 rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 ${
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  navigate("/cart");
+                }}
+                className={`mobile-nav-item w-full flex items-center justify-between py-3 px-4 rounded-xl text-sm font-semibold tracking-wide text-left transition-all duration-200 mt-2 ${
                   location.pathname === "/cart"
-                    ? "bg-gradient-to-r from-[#4b2c5e] to-[#6b4e7d] text-white shadow-lg"
-                    : "text-slate-700 hover:bg-[#ffd27a]/20 hover:text-[#4b2c5e]"
+                    ? "bg-white text-[#0f172a] shadow-md"
+                    : "bg-transparent text-white/80 hover:bg-white/10 hover:text-white"
                 }`}
               >
                 <span>Cart</span>
                 {totalItems > 0 && (
-                  <span className="w-6 h-6 bg-[#ffd27a] text-[#4b2c5e] text-xs font-bold rounded-full flex items-center justify-center">
+                  <span className="w-7 h-7 bg-[#facc15] text-[#0f172a] text-xs font-bold rounded-full flex items-center justify-center">
                     {totalItems}
                   </span>
                 )}
-              </Link>
+              </button>
             </nav>
 
-            <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-[#ffd27a]/20">
-              <div className="text-center">
-                <p className="text-xs text-slate-400 font-light">Made with care at EKA</p>
-              </div>
+            {/* Footer */}
+            <div className="absolute bottom-0 left-0 right-0 px-5 py-4 border-t border-white/10">
+              <p className="text-[11px] text-white/40 text-center tracking-wide">
+                Made with care at EKA
+              </p>
             </div>
           </div>
         </div>
