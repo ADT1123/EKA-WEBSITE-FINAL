@@ -64,6 +64,7 @@ const Footer = () => {
     { name: "Featured Products", path: "/shop" },
     { name: "Privacy Policy", path: "/privacy" },
     { name: "Contact", path: "/contact" },
+    { name: "Terms and Conditions", path: "/terms" },
   ];
 
   const socialButtons = [

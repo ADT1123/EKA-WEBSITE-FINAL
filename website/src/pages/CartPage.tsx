@@ -13,12 +13,12 @@ const COUPONS: Record<string, CouponRule> = {
   FLATEKA10: {
     label: "Flat 10% off",
     getDiscount: (subtotal) => Math.round(subtotal * 0.1),
-    minSubtotal: 1000,
+    minSubtotal: 400,
   },
   EKA200: {
     label: "₹200 off",
     getDiscount: () => 200,
-    minSubtotal: 1500,
+    minSubtotal: 1000,
   },
 };
 
