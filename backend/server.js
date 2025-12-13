@@ -3,7 +3,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const adminRoutes = require('./routes/admin');
-const couponRoutes = require('./routes/coupons');
 const paymentRoutes = require('./routes/payments');
 
 const app = express();
@@ -26,8 +25,6 @@ app.use(express.json());
 
 // ADMIN ROUTES
 app.use('/api/admin', adminRoutes);
-
-app.use('/api/coupons', couponRoutes);
 
 // health check
 app.get("/api/health", (req, res) => {

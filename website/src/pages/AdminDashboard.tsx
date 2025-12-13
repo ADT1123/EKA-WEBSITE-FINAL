@@ -36,20 +36,7 @@ interface Order {
   razorpaySignature?: string;
 }
 
-interface Coupon {
-  _id: string;
-  code: string;
-  label: string;
-  discountType: 'percentage' | 'fixed';
-  discountValue: number;
-  minSubtotal: number;
-  isActive: boolean;
-  createdAt: string;
-}
-
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState<'orders' | 'coupons'>('orders');
-  
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -66,30 +53,11 @@ const AdminDashboard = () => {
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [editingNotes, setEditingNotes] = useState<{ id: string; text: string } | null>(null);
 
-  // Coupons state
-  const [coupons, setCoupons] = useState<Coupon[]>([]);
-  const [loadingCoupons, setLoadingCoupons] = useState(false);
-  const [showCouponModal, setShowCouponModal] = useState(false);
-  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
-  const [couponForm, setCouponForm] = useState({
-    code: '',
-    label: '',
-    discountType: 'percentage' as 'percentage' | 'fixed',
-    discountValue: 0,
-    minSubtotal: 0,
-  });
-
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchOrders();
   }, []);
-
-  useEffect(() => {
-    if (activeTab === 'coupons') {
-      fetchCoupons();
-    }
-  }, [activeTab]);
 
   const fetchOrders = async () => {
     try {
@@ -115,24 +83,6 @@ const AdminDashboard = () => {
       console.error('Failed to fetch orders', err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchCoupons = async () => {
-    setLoadingCoupons(true);
-    try {
-      const token = localStorage.getItem('adminToken');
-      const res = await fetch(`${API_BASE_URL}/api/coupons/admin/all`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setCoupons(data);
-      }
-    } catch (err) {
-      console.error('Fetch coupons error:', err);
-    } finally {
-      setLoadingCoupons(false);
     }
   };
 
@@ -217,110 +167,10 @@ const AdminDashboard = () => {
     }
   };
 
-  // Coupon handlers
-  const openCouponModal = (coupon?: Coupon) => {
-    if (coupon) {
-      setEditingCoupon(coupon);
-      setCouponForm({
-        code: coupon.code,
-        label: coupon.label,
-        discountType: coupon.discountType,
-        discountValue: coupon.discountValue,
-        minSubtotal: coupon.minSubtotal,
-      });
-    } else {
-      setEditingCoupon(null);
-      setCouponForm({
-        code: '',
-        label: '',
-        discountType: 'percentage',
-        discountValue: 0,
-        minSubtotal: 0,
-      });
-    }
-    setShowCouponModal(true);
-  };
-
-  const closeCouponModal = () => {
-    setShowCouponModal(false);
-    setEditingCoupon(null);
-  };
-
-  const saveCoupon = async () => {
-    try {
-      const token = localStorage.getItem('adminToken');
-
-      if (editingCoupon) {
-        const res = await fetch(
-          `${API_BASE_URL}/api/coupons/admin/${editingCoupon._id}`,
-          {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(couponForm),
-          }
-        );
-        if (res.ok) {
-          await fetchCoupons();
-        }
-      } else {
-        const res = await fetch(`${API_BASE_URL}/api/coupons/admin/create`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(couponForm),
-        });
-        if (res.ok) {
-          await fetchCoupons();
-        }
-      }
-      closeCouponModal();
-    } catch (err) {
-      console.error('Save coupon error:', err);
-      alert('Failed to save coupon');
-    }
-  };
-
-  const toggleCouponActive = async (id: string, isActive: boolean) => {
-    try {
-      const token = localStorage.getItem('adminToken');
-      const res = await fetch(`${API_BASE_URL}/api/coupons/admin/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ isActive: !isActive }),
-      });
-      if (res.ok) {
-        await fetchCoupons();
-      }
-    } catch (err) {
-      console.error('Toggle coupon error:', err);
-    }
-  };
-
-  const deleteCoupon = async (id: string) => {
-    if (!confirm('Delete this coupon?')) return;
-    try {
-      const token = localStorage.getItem('adminToken');
-      await fetch(`${API_BASE_URL}/api/coupons/admin/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      await fetchCoupons();
-    } catch (err) {
-      console.error('Delete coupon error:', err);
-    }
-  };
-
-  // Shipping label generation
+  // Shipping label: half A4, no weight/dimensions/courier
   const generateShippingLabel = (order: Order) => {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
     const marginX = 10;
     let y = 15;
 
@@ -334,6 +184,7 @@ const AdminDashboard = () => {
     doc.text('www.ekagifts.com', 105, y, { align: 'center' });
     y += 10;
 
+    // barcode
     const canvas = document.createElement('canvas');
     JsBarcode(canvas, order.orderId, {
       format: 'CODE128',
@@ -346,6 +197,7 @@ const AdminDashboard = () => {
     doc.addImage(barcodeImg, 'PNG', marginX + 20, y, 110, 25);
     y += 35;
 
+    // FROM
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.text('FROM:', marginX, y);
@@ -362,6 +214,7 @@ const AdminDashboard = () => {
     doc.text('[City, State, PIN]', marginX, y);
     y += 10;
 
+    // TO
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.text('SHIP TO:', marginX, y);
@@ -385,6 +238,7 @@ const AdminDashboard = () => {
     doc.text(`Email: ${order.email}`, marginX, y);
     y += 8;
 
+    // order details box - stays in upper half
     const boxTop = y;
     const boxHeight = 30;
 
@@ -408,16 +262,18 @@ const AdminDashboard = () => {
     );
     doc.text(`Items: ${order.items.length}`, marginX + 70, boxTop + 7);
 
+    // footer
     doc.setFontSize(8);
     doc.setFont('helvetica', 'italic');
     doc.text('Handle with care', 105, boxTop + boxHeight + 10, {
       align: 'center',
     });
 
+    // only upper half used – rest blank
     doc.save(`ShippingLabel_${order.orderId}.pdf`);
   };
 
-  // Continue with existing filter/sort logic...
+  // FILTER + SORT
   const filteredOrders = useMemo(() => {
     let list = orders.filter((o) => {
       const q = search.trim().toLowerCase();
@@ -480,6 +336,7 @@ const AdminDashboard = () => {
     return list;
   }, [orders, search, statusFilter, deliveryFilter, couponFilter, checkedFilter, dateRange, sortBy]);
 
+  // STATS
   const totalOrders = filteredOrders.length;
   const totalRevenue = filteredOrders
     .filter((o) => o.status === 'paid')
@@ -489,6 +346,7 @@ const AdminDashboard = () => {
   ).size;
   const paidCount = filteredOrders.filter((o) => o.status === 'paid').length;
 
+  // EXPORTS
   const exportToExcel = () => {
     const data = filteredOrders.map((o) => ({
       'EKA ID': o.orderId,
@@ -554,7 +412,7 @@ const AdminDashboard = () => {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="px-6 py-3 rounded-lg border border-slate-200 bg-white text-sm text-slate-600">
-          Loading...
+          Loading orders…
         </div>
       </div>
     );
@@ -566,9 +424,9 @@ const AdminDashboard = () => {
       <header className="border-b border-slate-200 bg-white">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold">EKA · Admin</h1>
+            <h1 className="text-xl font-semibold">EKA · Orders Admin</h1>
             <p className="text-xs text-slate-500">
-              Manage orders, coupons & fulfilment
+              Orders, payments, and fulfilment overview
             </p>
           </div>
           <button
@@ -583,281 +441,385 @@ const AdminDashboard = () => {
         </div>
       </header>
 
-      {/* Tabs */}
-      <div className="border-b border-slate-200 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex gap-6">
+      <main className="max-w-[1600px] mx-auto px-6 py-6 space-y-6">
+        {/* Metrics */}
+        <section className="grid gap-4 md:grid-cols-4">
+          <div className="rounded-xl bg-white border border-slate-200 p-4">
+            <p className="text-xs text-slate-500 uppercase tracking-wide">
+              Total orders
+            </p>
+            <p className="mt-1 text-2xl font-semibold">{totalOrders}</p>
+          </div>
+          <div className="rounded-xl bg-white border border-slate-200 p-4">
+            <p className="text-xs text-slate-500 uppercase tracking-wide">
+              Paid revenue
+            </p>
+            <p className="mt-1 text-2xl font-semibold">
+              ₹{totalRevenue.toLocaleString('en-IN')}
+            </p>
+          </div>
+          <div className="rounded-xl bg-white border border-slate-200 p-4">
+            <p className="text-xs text-slate-500 uppercase tracking-wide">
+              Customers
+            </p>
+            <p className="mt-1 text-2xl font-semibold">{uniqueCustomers}</p>
+          </div>
+          <div className="rounded-xl bg-white border border-slate-200 p-4">
+            <p className="text-xs text-slate-500 uppercase tracking-wide">
+              Paid orders
+            </p>
+            <p className="mt-1 text-2xl font-semibold">{paidCount}</p>
+          </div>
+        </section>
+
+        {/* Filters */}
+        <section className="space-y-4">
+          {/* Search */}
+          <div className="flex flex-col md:flex-row gap-3">
+            <input
+              type="text"
+              placeholder="Search EKA ID, name, email, phone, address, notes, coupon…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="flex-1 px-3 py-2 text-sm rounded-md border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
+            />
             <button
-              onClick={() => setActiveTab('orders')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'orders'
-                  ? 'border-slate-900 text-slate-900'
-                  : 'border-transparent text-slate-500 hover:text-slate-900'
-              }`}
+              onClick={fetchOrders}
+              className="px-4 py-2 rounded-md bg-slate-900 text-white text-xs font-medium hover:bg-slate-800"
             >
-              📦 Orders
-            </button>
-            <button
-              onClick={() => setActiveTab('coupons')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'coupons'
-                  ? 'border-slate-900 text-slate-900'
-                  : 'border-transparent text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              🎟️ Coupons
+              Refresh
             </button>
           </div>
-        </div>
-      </div>
 
-      <main className="max-w-[1600px] mx-auto px-6 py-6">
-        {activeTab === 'orders' && (
-          <div className="space-y-6">
-            {/* Metrics */}
-            <section className="grid gap-4 md:grid-cols-4">
-              <div className="rounded-xl bg-white border border-slate-200 p-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wide">
-                  Total orders
-                </p>
-                <p className="mt-1 text-2xl font-semibold">{totalOrders}</p>
-              </div>
-              <div className="rounded-xl bg-white border border-slate-200 p-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wide">
-                  Paid revenue
-                </p>
-                <p className="mt-1 text-2xl font-semibold">
-                  ₹{totalRevenue.toLocaleString('en-IN')}
-                </p>
-              </div>
-              <div className="rounded-xl bg-white border border-slate-200 p-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wide">
-                  Customers
-                </p>
-                <p className="mt-1 text-2xl font-semibold">{uniqueCustomers}</p>
-              </div>
-              <div className="rounded-xl bg-white border border-slate-200 p-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wide">
-                  Paid orders
-                </p>
-                <p className="mt-1 text-2xl font-semibold">{paidCount}</p>
-              </div>
-            </section>
+          {/* Filters row */}
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-2 text-xs rounded-md border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-400"
+            >
+              <option value="">Payment status</option>
+              <option value="paid">Paid</option>
+              <option value="pending">Pending</option>
+              <option value="failed">Failed</option>
+            </select>
 
-            {/* Filters + existing orders table... (keep exact same as your paste.txt) */}
-            {/* For brevity, I'm not repeating the entire orders table code here */}
-            {/* The orders section remains identical to your existing code */}
+            <select
+              value={deliveryFilter}
+              onChange={(e) => setDeliveryFilter(e.target.value)}
+              className="px-3 py-2 text-xs rounded-md border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-400"
+            >
+              <option value="">Delivery status</option>
+              <option value="ordered">Ordered</option>
+              <option value="dispatched">Dispatched</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+            </select>
+
+            <select
+              value={checkedFilter}
+              onChange={(e) => setCheckedFilter(e.target.value)}
+              className="px-3 py-2 text-xs rounded-md border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-400"
+            >
+              <option value="">Order status</option>
+              <option value="checked">Checked</option>
+              <option value="unchecked">Unchecked</option>
+            </select>
+
+            <select
+              value={couponFilter}
+              onChange={(e) => setCouponFilter(e.target.value)}
+              className="px-3 py-2 text-xs rounded-md border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-400"
+            >
+              <option value="">Coupon usage</option>
+              <option value="with-coupon">With coupon</option>
+              <option value="no-coupon">No coupon</option>
+            </select>
+
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-3 py-2 text-xs rounded-md border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-400"
+            >
+              <option value="date-desc">Date · Newest</option>
+              <option value="date-asc">Date · Oldest</option>
+              <option value="amount-desc">Amount · High → Low</option>
+              <option value="amount-asc">Amount · Low → High</option>
+              <option value="name-asc">Name · A → Z</option>
+              <option value="name-desc">Name · Z → A</option>
+            </select>
+
+            <button
+              onClick={clearFilters}
+              className="px-3 py-2 text-xs rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
+            >
+              Clear filters
+            </button>
           </div>
-        )}
 
-        {activeTab === 'coupons' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Manage Coupons</h2>
-              <button
-                onClick={() => openCouponModal()}
-                className="px-4 py-2 rounded-md bg-slate-900 text-white text-xs font-medium hover:bg-slate-800"
-              >
-                + Add Coupon
-              </button>
+          {/* Date range + export */}
+          <div className="flex flex-col md:flex-row gap-3 items-center">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-600">Date range</span>
+              <input
+                type="date"
+                value={dateRange.start}
+                onChange={(e) =>
+                  setDateRange((d) => ({ ...d, start: e.target.value }))
+                }
+                className="px-3 py-2 text-xs rounded-md border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-400"
+              />
+              <span className="text-xs text-slate-500">to</span>
+              <input
+                type="date"
+                value={dateRange.end}
+                onChange={(e) =>
+                  setDateRange((d) => ({ ...d, end: e.target.value }))
+                }
+                className="px-3 py-2 text-xs rounded-md border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-400"
+              />
             </div>
 
-            {loadingCoupons ? (
-              <p className="text-slate-500 text-sm">Loading coupons...</p>
-            ) : coupons.length === 0 ? (
-              <div className="rounded-xl bg-white border border-slate-200 p-8 text-center">
-                <p className="text-sm text-slate-500">No coupons created yet.</p>
-              </div>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {coupons.map((coupon) => (
-                  <div
-                    key={coupon._id}
-                    className={`rounded-xl bg-white border p-5 ${
-                      coupon.isActive
-                        ? 'border-emerald-200'
-                        : 'border-slate-200 opacity-60'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h3 className="text-base font-bold text-slate-900 font-mono">
-                          {coupon.code}
-                        </h3>
-                        <p className="text-xs text-slate-600">{coupon.label}</p>
-                      </div>
-                      <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${
-                          coupon.isActive
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-slate-100 text-slate-500'
-                        }`}
-                      >
-                        {coupon.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </div>
-
-                    <div className="space-y-1.5 text-xs text-slate-600 mb-4">
-                      <div className="flex justify-between">
-                        <span>Discount</span>
-                        <span className="font-medium text-slate-900">
-                          {coupon.discountType === 'percentage'
-                            ? `${coupon.discountValue}%`
-                            : `₹${coupon.discountValue}`}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Min order</span>
-                        <span className="font-medium text-slate-900">
-                          ₹{coupon.minSubtotal}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => openCouponModal(coupon)}
-                        className="flex-1 px-3 py-1.5 rounded-md bg-slate-100 text-slate-700 text-xs font-medium hover:bg-slate-200"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() =>
-                          toggleCouponActive(coupon._id, coupon.isActive)
-                        }
-                        className="flex-1 px-3 py-1.5 rounded-md bg-slate-100 text-slate-700 text-xs font-medium hover:bg-slate-200"
-                      >
-                        {coupon.isActive ? 'Deactivate' : 'Activate'}
-                      </button>
-                      <button
-                        onClick={() => deleteCoupon(coupon._id)}
-                        className="px-3 py-1.5 rounded-md bg-rose-100 text-rose-700 text-xs font-medium hover:bg-rose-200"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="flex gap-2 md:ml-auto">
+              <button
+                onClick={exportToExcel}
+                className="px-4 py-2 rounded-md bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-500"
+              >
+                Export Excel
+              </button>
+              <button
+                onClick={exportToPDF}
+                className="px-4 py-2 rounded-md bg-slate-700 text-white text-xs font-medium hover:bg-slate-600"
+              >
+                Export PDF
+              </button>
+            </div>
           </div>
-        )}
+        </section>
+
+        {/* Table */}
+        <section className="rounded-2xl bg-white border border-slate-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr className="text-xs text-slate-500 uppercase tracking-wide">
+                  <th className="px-4 py-3 text-center">✓</th>
+                  <th className="px-4 py-3 text-left">EKA ID</th>
+                  <th className="px-4 py-3 text-left">Customer</th>
+                  <th className="px-4 py-3 text-left">Address</th>
+                  <th className="px-4 py-3 text-left">Amount</th>
+                  <th className="px-4 py-3 text-left">Payment</th>
+                  <th className="px-4 py-3 text-left">Delivery</th>
+                  <th className="px-4 py-3 text-left">Notes</th>
+                  <th className="px-4 py-3 text-left">Date</th>
+                  <th className="px-4 py-3 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {filteredOrders.map((o) => {
+                  const paymentClass =
+                    o.status === 'paid'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : o.status === 'pending'
+                      ? 'bg-amber-50 text-amber-700 border-amber-200'
+                      : 'bg-rose-50 text-rose-700 border-rose-200';
+
+                  const dStatus = o.deliveryStatus || 'ordered';
+                  const deliveryClass =
+                    dStatus === 'delivered'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : dStatus === 'shipped'
+                      ? 'bg-sky-50 text-sky-700 border-sky-200'
+                      : dStatus === 'dispatched'
+                      ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                      : 'bg-slate-50 text-slate-700 border-slate-200';
+
+                  return (
+                    <tr key={o._id} className="hover:bg-slate-50">
+                      <td className="px-4 py-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={!!o.isChecked}
+                          onChange={() => toggleChecked(o._id, !!o.isChecked)}
+                          className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                        />
+                      </td>
+                      <td className="px-4 py-3 align-top">
+                        <div className="font-mono text-xs font-semibold text-slate-900">
+                          {o.orderId}
+                        </div>
+                        <div className="text-[11px] text-slate-400">
+                          {o.razorpayOrderId || '-'}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 align-top">
+                        <div className="text-sm font-medium text-slate-900">
+                          {o.customerName}
+                        </div>
+                        <div className="text-[11px] text-slate-500">{o.email}</div>
+                        <div className="text-[11px] text-slate-500">{o.phone}</div>
+                      </td>
+                      <td className="px-4 py-3 align-top max-w-xs">
+                        <p className="text-xs text-slate-600 line-clamp-2">
+                          {o.address}
+                        </p>
+                      </td>
+                      <td className="px-4 py-3 align-top">
+                        <div className="text-sm font-semibold text-slate-900">
+                          ₹{o.totalAmount.toLocaleString('en-IN')}
+                        </div>
+                        {o.couponCode && (
+                          <span className="inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">
+                            {o.couponCode}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 align-top">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border ${paymentClass}`}
+                        >
+                          {o.status.toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 align-top">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border ${deliveryClass}`}
+                        >
+                          {dStatus.toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 align-top max-w-xs">
+                        {editingNotes && editingNotes.id === o._id ? (
+                          <div className="flex gap-1">
+                            <input
+                              type="text"
+                              value={editingNotes.text}
+                              onChange={(e) =>
+                                setEditingNotes({ id: o._id, text: e.target.value })
+                              }
+                              className="flex-1 px-2 py-1 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-slate-400"
+                              autoFocus
+                            />
+                            <button
+                              onClick={() => saveNotes(o._id, editingNotes.text)}
+                              className="px-2 py-1 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-500"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => setEditingNotes(null)}
+                              className="px-2 py-1 text-xs bg-slate-200 text-slate-700 rounded hover:bg-slate-300"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          <div
+                            onClick={() =>
+                              setEditingNotes({ id: o._id, text: o.notes || '' })
+                            }
+                            className="text-xs text-slate-600 cursor-pointer hover:bg-slate-100 p-1 rounded line-clamp-2"
+                          >
+                            {o.notes && o.notes.trim().length > 0
+                              ? o.notes
+                              : 'Click to add notes...'}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 align-top text-[11px] text-slate-500">
+                        {new Date(o.createdAt).toLocaleDateString('en-IN')}
+                      </td>
+                      <td className="px-4 py-3 align-top relative">
+                        <button
+                          onClick={() =>
+                            setMenuOpen((prev) => (prev === o._id ? null : o._id))
+                          }
+                          className="p-2 rounded-md hover:bg-slate-100"
+                        >
+                          <svg
+                            className="w-4 h-4 text-slate-600"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path d="M10 4a1.5 1.5 0 110-3 1.5 1.5 0 010 3zM10 11.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3zM10 19a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" />
+                          </svg>
+                        </button>
+
+                        {menuOpen === o._id && (
+                          <div className="absolute right-0 mt-2 w-56 rounded-md border border-slate-200 bg-white shadow-lg z-50">
+                            <button
+                              onClick={() => setSelectedOrder(o)}
+                              className="w-full px-4 py-2 text-left text-xs text-slate-800 hover:bg-slate-50"
+                            >
+                              View details
+                            </button>
+                            <button
+                              onClick={() => {
+                                generateShippingLabel(o);
+                                setMenuOpen(null);
+                              }}
+                              className="w-full px-4 py-2 text-left text-xs text-blue-700 hover:bg-blue-50 border-t border-slate-200"
+                            >
+                              📦 Generate shipping label
+                            </button>
+                            <div className="border-t border-slate-200">
+                              <p className="px-4 pt-2 text-[10px] font-semibold text-slate-500 uppercase">
+                                Payment
+                              </p>
+                              {['paid', 'pending', 'failed'].map((status) => (
+                                <button
+                                  key={status}
+                                  onClick={() => updateStatus(o._id, status)}
+                                  className="w-full px-4 py-1.5 text-left text-xs text-slate-800 hover:bg-slate-50"
+                                >
+                                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                                </button>
+                              ))}
+                            </div>
+                            <div className="border-t border-slate-200">
+                              <p className="px-4 pt-2 text-[10px] font-semibold text-slate-500 uppercase">
+                                Delivery
+                              </p>
+                              {['ordered', 'dispatched', 'shipped', 'delivered'].map(
+                                (status) => (
+                                  <button
+                                    key={status}
+                                    onClick={() => updateDeliveryStatus(o._id, status)}
+                                    className="w-full px-4 py-1.5 text-left text-xs text-slate-800 hover:bg-slate-50"
+                                  >
+                                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                                  </button>
+                                )
+                              )}
+                            </div>
+                            <button
+                              onClick={() => {
+                                setConfirmDelete(o);
+                                setMenuOpen(null);
+                              }}
+                              className="w-full px-4 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 border-t border-slate-200"
+                            >
+                              Delete order
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {filteredOrders.length === 0 && (
+            <div className="py-10 text-center text-sm text-slate-500">
+              No orders match the current filters.
+            </div>
+          )}
+        </section>
       </main>
 
-      {/* Coupon Modal */}
-      {showCouponModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full border border-slate-200">
-            <h2 className="text-lg font-semibold mb-4">
-              {editingCoupon ? 'Edit Coupon' : 'Create Coupon'}
-            </h2>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                  Coupon Code *
-                </label>
-                <input
-                  type="text"
-                  value={couponForm.code}
-                  onChange={(e) =>
-                    setCouponForm({ ...couponForm, code: e.target.value.toUpperCase() })
-                  }
-                  disabled={!!editingCoupon}
-                  placeholder="FLATEKA10"
-                  className="w-full px-3 py-2 text-sm rounded-md border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 disabled:opacity-50 font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                  Label *
-                </label>
-                <input
-                  type="text"
-                  value={couponForm.label}
-                  onChange={(e) =>
-                    setCouponForm({ ...couponForm, label: e.target.value })
-                  }
-                  placeholder="Flat 10% off"
-                  className="w-full px-3 py-2 text-sm rounded-md border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                  Discount Type *
-                </label>
-                <select
-                  value={couponForm.discountType}
-                  onChange={(e) =>
-                    setCouponForm({
-                      ...couponForm,
-                      discountType: e.target.value as 'percentage' | 'fixed',
-                    })
-                  }
-                  className="w-full px-3 py-2 text-sm rounded-md border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400"
-                >
-                  <option value="percentage">Percentage (%)</option>
-                  <option value="fixed">Fixed Amount (₹)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                  Discount Value *
-                </label>
-                <input
-                  type="number"
-                  value={couponForm.discountValue}
-                  onChange={(e) =>
-                    setCouponForm({
-                      ...couponForm,
-                      discountValue: Number(e.target.value),
-                    })
-                  }
-                  placeholder={couponForm.discountType === 'percentage' ? '10' : '200'}
-                  className="w-full px-3 py-2 text-sm rounded-md border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                  Minimum Order Value (₹)
-                </label>
-                <input
-                  type="number"
-                  value={couponForm.minSubtotal}
-                  onChange={(e) =>
-                    setCouponForm({
-                      ...couponForm,
-                      minSubtotal: Number(e.target.value),
-                    })
-                  }
-                  placeholder="0"
-                  className="w-full px-3 py-2 text-sm rounded-md border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400"
-                />
-              </div>
-            </div>
-
-            <div className="mt-6 flex gap-2">
-              <button
-                onClick={closeCouponModal}
-                className="flex-1 px-4 py-2 rounded-md bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={saveCoupon}
-                className="flex-1 px-4 py-2 rounded-md bg-slate-900 text-white text-sm font-medium hover:bg-slate-800"
-              >
-                {editingCoupon ? 'Update' : 'Create'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-{/* View modal */}
+      {/* View modal */}
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
           <div className="max-w-2xl w-full bg-white rounded-xl border border-slate-200 shadow-lg max-h-[90vh] overflow-y-auto">
