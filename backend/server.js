@@ -15,7 +15,6 @@ app.use(
       "http://localhost:8080",
       "http://localhost:8081",
       "https://www.ekagifts.com",
-      "ekagifts.com",
       "https://ekagifts.com",
     ],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
