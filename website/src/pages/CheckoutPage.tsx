@@ -17,7 +17,7 @@ interface RazorpayResponse {
 }
 
 // Backend base URL from env
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://eka-backend-v29n.onrender.com";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 // Indian states list
 const INDIAN_STATES = [
@@ -166,7 +166,7 @@ const CheckoutPage: React.FC = () => {
 
       const fullAddress = `${addressLine.trim()}, ${city.trim()}, ${stateValue.trim()} - ${pin.trim()}`;
 
-      // 🔁 Render backend use kar
+      // Create order via backend
       const orderResponse = await fetch(
         `${API_BASE}/api/payments/create-order`,
         {
@@ -186,10 +186,14 @@ const CheckoutPage: React.FC = () => {
         }
       );
 
+      if (!orderResponse.ok) {
+        throw new Error(`HTTP ${orderResponse.status}: ${orderResponse.statusText}`);
+      }
+
       const orderData = await orderResponse.json();
 
       if (!orderData.success) {
-        alert("Failed to create order: " + orderData.message);
+        alert("Failed to create order: " + (orderData.message || "Unknown error"));
         setLoading(false);
         return;
       }
@@ -200,7 +204,7 @@ const CheckoutPage: React.FC = () => {
         currency: orderData.currency,
         name: "EKA Gifts",
         description: "Customized Gift Box",
-        image: "https://ekagifts.com/logo.png",
+        image: "/img/EKAlogo.png",
         order_id: orderData.orderId,
         prefill: {
           name: name.trim(),
@@ -213,28 +217,33 @@ const CheckoutPage: React.FC = () => {
         },
         theme: { color: "#ffd27a" },
         handler: async (response: RazorpayResponse) => {
-          const verifyResponse = await fetch(
-            `${API_BASE}/api/payments/verify`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                customerOrderId: orderData.customerOrderId,
-              }),
-            }
-          );
-
-          const verifyData = await verifyResponse.json();
-
-          if (verifyData.success) {
-            clearCart();
-            navigate(
-              `/order-success?payment_id=${response.razorpay_payment_id}&order_id=${orderData.customerOrderId}`
+          try {
+            const verifyResponse = await fetch(
+              `${API_BASE}/api/payments/verify`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  customerOrderId: orderData.customerOrderId,
+                }),
+              }
             );
-          } else {
+
+            const verifyData = await verifyResponse.json();
+
+            if (verifyData.success) {
+              clearCart();
+              navigate(
+                `/order-success?payment_id=${response.razorpay_payment_id}&order_id=${orderData.customerOrderId}`
+              );
+            } else {
+              alert("Payment verification failed. Please contact support.");
+            }
+          } catch (err) {
+            console.error("Verification error:", err);
             alert("Payment verification failed. Please contact support.");
           }
           setLoading(false);
@@ -250,7 +259,7 @@ const CheckoutPage: React.FC = () => {
       paymentObject.open();
     } catch (err) {
       console.error("Payment error:", err);
-      alert("Payment failed. Please try again.");
+      alert("Payment failed. Please check your connection and try again.");
       setLoading(false);
     }
   };
@@ -475,16 +484,13 @@ const CheckoutPage: React.FC = () => {
               <p className="text-[11px] text-gray-400 pt-1">
                 By placing the order you agree to our{" "}
                 <a
-                  href="https://ekagifts.com/terms"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="/shipping-policy"
                   className="text-[#ffd27a] underline cursor-pointer"
                 >
-                  Terms &amp; Conditions
+                  Shipping Policy
                 </a>
                 .
               </p>
-
             </div>
           </div>
 
@@ -598,4 +604,3 @@ const CheckoutPage: React.FC = () => {
 };
 
 export default CheckoutPage;
-
