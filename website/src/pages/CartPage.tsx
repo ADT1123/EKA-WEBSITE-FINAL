@@ -15,6 +15,11 @@ const COUPONS: Record<string, CouponRule> = {
     getDiscount: (subtotal) => Math.round(subtotal * 0.1),
     minSubtotal: 400,
   },
+  CHINEKA102345672344: {
+    label: "Flat 99% off",
+    getDiscount: (subtotal) => Math.round(subtotal * .999),
+    minSubtotal: 200,
+  },
   EKA200: {
     label: "₹200 off",
     getDiscount: () => 200,
