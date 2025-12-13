@@ -103,7 +103,7 @@ const CheckoutPage: React.FC = () => {
     [cart]
   );
 
-  const totalAmount = 1;
+  const totalAmount = Math.max(subtotalRaw - (discount || 0), 0);
 
   // Filter states based on query
   const filteredStates = useMemo(() => {
